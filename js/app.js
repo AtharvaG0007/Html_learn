@@ -254,7 +254,7 @@ function setupReports(){const input=document.getElementById("reportMonth");if(!i
 function setupFastNavigation() {
   const prefetched = new Set();
   function prefetchPage(link) {
-    if (!link || link.origin !== location.origin || !/\\.html(?:$|#)/.test(link.pathname + link.hash)) return;
+    if (!link || link.origin !== location.origin || !/\.html(?:$|#)/.test(link.pathname + link.hash)) return;
     const url = link.href.split("#")[0];
     if (prefetched.has(url) || url === location.href.split("#")[0]) return;
     prefetched.add(url);
