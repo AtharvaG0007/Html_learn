@@ -3,20 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#6658e8">
+  <meta name="description" content="A simple personal expense tracker with monthly budgets and spending insights.">
   <title>My Expense Tracker</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <header class="header">
-      <div class="logo">₹</div>
-      <div><h1>My Expense Tracker</h1><p>Manage your money in a simple way.</p></div>
+      <div class="logo" aria-hidden="true">₹</div>
+      <div class="header-copy">
+        <h1>My Expense Tracker</h1>
+        <p>Manage your money in a simple way.</p>
+      </div>
     </header>
 
-    <section class="summary">
+    <section class="summary" aria-label="Money summary">
       <div class="summary-card balance-card"><p>My Balance</p><h2 id="balance">₹0.00</h2><span>Income - Expenses</span></div>
       <div class="summary-card"><p>Total Income</p><h2 class="income-text" id="totalIncome">₹0.00</h2><span>Money received</span></div>
       <div class="summary-card"><p>Total Expenses</p><h2 class="expense-text" id="totalExpense">₹0.00</h2><span>Money spent</span></div>
+    </section>
+
+    <section class="feature-grid" aria-label="Monthly money insights">
+      <section class="panel budget-panel">
+        <div class="feature-heading">
+          <div>
+            <p class="eyebrow">PLAN YOUR SPENDING</p>
+            <h2 class="section-title">Monthly Budget</h2>
+          </div>
+          <span class="feature-icon" aria-hidden="true">◎</span>
+        </div>
+        <label for="selectedMonth">Choose month</label>
+        <input type="month" id="selectedMonth">
+        <form id="budgetForm" class="budget-form">
+          <label for="budgetAmount">Monthly spending limit (₹)</label>
+          <div class="budget-input-row">
+            <input type="number" id="budgetAmount" min="1" step="0.01" placeholder="Example: 10000" inputmode="decimal">
+            <button type="submit" class="secondary-button">Save budget</button>
+          </div>
+        </form>
+        <div class="budget-stats">
+          <div><span>Spent this month</span><strong id="monthlySpent">₹0.00</strong></div>
+          <div class="remaining-stat"><span id="remainingLabel">Remaining</span><strong id="budgetRemaining">Not set</strong></div>
+        </div>
+        <div class="progress-track" id="budgetProgressTrack" role="progressbar" aria-label="Monthly budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="progress-fill" id="budgetProgress"></div>
+        </div>
+        <p class="budget-status" id="budgetStatus" aria-live="polite">Set a monthly budget to start tracking your spending.</p>
+      </section>
+
+      <section class="panel insights-panel">
+        <div class="feature-heading">
+          <div>
+            <p class="eyebrow">UNDERSTAND YOUR HABITS</p>
+            <h2 class="section-title">Spending Insights</h2>
+          </div>
+          <span class="feature-icon insight-icon" aria-hidden="true">↗</span>
+        </div>
+        <div class="top-category">
+          <span>Highest spending category</span>
+          <strong id="topCategory">No spending yet</strong>
+          <small id="topCategoryAmount">Add an expense to see your insights.</small>
+        </div>
+        <div class="category-heading"><span>Category breakdown</span><span id="insightMonthLabel"></span></div>
+        <div id="categoryInsights" class="category-insights">
+          <p class="empty-insight">Your category breakdown will appear here.</p>
+        </div>
+      </section>
     </section>
 
     <main class="main-content">
@@ -24,9 +77,9 @@
         <h2 class="section-title">Add New Transaction</h2>
         <form id="expenseForm">
           <label for="description">Description</label>
-          <input type="text" id="description" placeholder="Example: Lunch, Bus ticket" required>
+          <input type="text" id="description" maxlength="70" placeholder="Example: Lunch, Bus ticket" required>
           <label for="amount">Amount (₹)</label>
-          <input type="number" id="amount" placeholder="Enter amount" min="0.01" step="0.01" required>
+          <input type="number" id="amount" placeholder="Enter amount" min="0.01" step="0.01" inputmode="decimal" required>
           <label for="type">Transaction Type</label>
           <select id="type"><option value="expense">Expense</option><option value="income">Income</option></select>
           <label for="category">Category</label>
@@ -39,6 +92,7 @@
           <button type="submit" class="add-button">+ Add Transaction</button>
         </form>
         <p class="small-note">Your entries are saved in this browser.</p>
+        <p class="form-feedback" id="formFeedback" role="status" aria-live="polite"></p>
       </section>
 
       <section class="panel">
