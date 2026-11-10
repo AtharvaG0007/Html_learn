@@ -19,3 +19,13 @@ label{display:block;margin:13px 0 7px;color:#4d5870;font-size:13px;font-weight:b
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 /* Repeating attribution watermark for client-preview screenshots. */
 body:after{content:"";position:fixed;inset:0;z-index:1000;pointer-events:none;user-select:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='230'%3E%3Ctext x='170' y='115' text-anchor='middle' transform='rotate(-28 170 115)' font-family='Arial' font-size='18' font-weight='bold' letter-spacing='2' fill='%235b55d9' fill-opacity='.10'%3ESITECRAFTERS%3C/text%3E%3C/svg%3E");background-repeat:repeat}
+
+/* Monthly money insights */
+.report-controls{display:flex;align-items:end;justify-content:space-between;gap:18px}.report-controls>div:first-child{width:min(100%,320px)}.report-export{padding-bottom:0}
+.insight-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.insight-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.insight-card{margin:0;min-width:0}.insight-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#eeedff;color:var(--primary);font-size:20px;font-weight:bold}
+.insight-label{margin:14px 0 7px;color:var(--muted);font-size:12px;font-weight:bold}.insight-card h3{margin:0 0 7px;font-size:clamp(17px,2vw,22px);overflow-wrap:anywhere}.insight-detail{margin:0;color:var(--muted);font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.comparison-value{font-size:27px;font-weight:bold;letter-spacing:-.6px;margin:5px 0 7px}.recommendation-list{display:grid;gap:10px}.recommendation-item{display:flex;align-items:flex-start;gap:11px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fcfcff}.recommendation-item p{margin:0;color:#4f5a70;font-size:13px;line-height:1.55}.recommendation-mark{display:grid;place-items:center;flex:0 0 23px;height:23px;border-radius:50%;background:#e8f7f1;color:var(--green);font-weight:bold;font-size:13px}
+@media(max-width:800px){.insight-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.insight-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.report-controls{align-items:stretch;flex-direction:column;gap:8px}.report-controls>div:first-child{width:100%}.report-export .button{width:100%}.insight-metrics{gap:9px}.insight-grid{gap:9px}.insight-card{padding:16px}.comparison-value{font-size:23px}}
