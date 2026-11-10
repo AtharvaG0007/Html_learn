@@ -102,6 +102,7 @@ function downloadCsv(items,filename) {
 function updateBudgetPage() {
   const form=document.getElementById("monthlyBudgetForm");if(!form)return;
   const month=document.getElementById("budgetMonth").value||currentMonth,items=monthItems(month),spent=sum(items,"expense"),limit=Number(budgets[month])||0,percent=limit?spent/limit*100:0,remaining=limit-spent;
+  document.getElementById("budgetAmount").value=limit||"";
   document.getElementById("budgetSpent").textContent=money(spent);document.getElementById("budgetRemaining").textContent=limit?money(Math.abs(remaining))+(remaining<0?" over":""):"Not set";
   const bar=document.getElementById("budgetProgress");bar.style.width=Math.min(percent,100)+"%";bar.className=percent>=100?"over":percent>=80?"warn":"";
   const status=document.getElementById("budgetStatus");status.className="status "+(percent>=100?"over":percent>=80?"warn":"");
