@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5b55d9"><meta name="description" content="A simple personal finance and expense tracker.">
+<title>Reports | PocketTrack</title><link rel="stylesheet" href="css/style.css"></head><body><div class="container">
+<header class="site-header"><div class="brand"><div class="logo" aria-hidden="true">₹</div><div><h1>PocketTrack</h1><p>Simple money management</p></div></div>
+<nav class="nav" aria-label="Main navigation">
+<a href="index.html" class="">Dashboard</a>
+<a href="transactions.html" class="">Transactions</a>
+<a href="budget.html" class="">Budget</a>
+<a href="reports.html" class="active">Reports</a></nav></header>
+<main><div class="page-heading"><h2>Monthly reports</h2><p>Understand your income, expenses and spending habits.</p></div>
+<section class="panel"><div class="form-grid"><div><label for="reportMonth">Select report month</label><input id="reportMonth" type="month"></div><div class="field-full"><div class="form-actions"><button class="button secondary" type="button" id="reportExport">Download this month's CSV</button></div></div></div></section>
+<section class="summary"><div class="summary-card"><p>Monthly income</p><h3 class="income" id="reportIncome">₹0.00</h3></div><div class="summary-card"><p>Monthly expenses</p><h3 class="expense" id="reportExpense">₹0.00</h3></div><div class="summary-card balance-card"><p>Net savings</p><h3 id="reportSavings">₹0.00</h3></div></section>
+<div class="grid-two"><section class="panel"><h3>Expenses by category</h3><div id="reportCategories"><p class="empty">No expenses for this month.</p></div></section><section class="panel"><h3>Income vs expenses</h3><div id="incomeExpenseChart"><p class="empty">Add transactions to see your comparison.</p></div><p class="notice">Net savings = monthly income − monthly expenses. A negative result means expenses were higher than income.</p></section></div>
+</main><footer class="site-footer">Designed &amp; Developed by <strong>SiteCrafters</strong> · Client Preview</footer></div><script src="js/app.js"></script></body></html>

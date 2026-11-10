@@ -1,51 +1,61 @@
-# My Expense Tracker
+# PocketTrack — Personal Expense Tracker
 
-A beginner-friendly personal expense tracker built with HTML5, CSS3 and plain JavaScript.
+A multi-page, responsive personal expense tracker built with HTML5, CSS3 and beginner-friendly JavaScript.
+
+## Pages
+- `index.html` — dashboard with balance, income, expenses, recent activity and monthly budget snapshot.
+- `transactions.html` — add, edit, delete, search, filter and export transactions.
+- `budget.html` — monthly and category-wise budgets with progress and warning states.
+- `reports.html` — monthly income/expense comparison, category breakdown and CSV export.
 
 ## Features
-- Add income and expense transactions with category and date
-- Automatically calculate total income, total expenses and balance
-- Set a separate spending budget for each month
-- Track monthly spending, remaining budget and budget usage progress
-- Show a warning after 80% of the budget is used and an alert-style status when the budget is exceeded
-- View monthly spending insights by category
-- Identify the highest spending category for the selected month
-- Filter transactions by income or expense
-- Delete individual transactions or clear all transactions
-- Save transactions and monthly budgets in browser Local Storage
-- Responsive layout for desktop, tablet and mobile screens
+- Add income and expense records with description, amount, category, date, payment method and note.
+- Automatically calculate total income, total expenses, balance and monthly net savings.
+- Edit and delete individual transactions.
+- Search transactions by description, category or note.
+- Filter by transaction type and month.
+- Set monthly and category-wise spending limits.
+- See warnings at 80% and when a budget is exceeded.
+- Monthly category spending report and income-versus-expense bars.
+- Export all transactions or a selected month's transactions to CSV.
+- Save data in browser LocalStorage.
+- Responsive layout for mobile, tablet and desktop.
+- Consistent navigation across all four pages.
+- SiteCrafters preview watermark and attribution footer.
 
-## Project files
-- `index.html` - page structure, forms and insight sections
-- `style.css` - visual design and responsive layouts
-- `script.js` - transaction logic, monthly budget calculations, insights and Local Storage
+## Folder structure
+```
+Html_learn/
+├── index.html
+├── transactions.html
+├── budget.html
+├── reports.html
+├── css/
+│   └── style.css
+├── js/
+│   └── app.js
+└── README.md
+```
 
-## How to run
-Download or clone this repository and open `index.html` in a modern browser. No npm, Node.js, server, database or API key is required.
+## Run the project
+Download or clone the repository and open `index.html` in a modern browser. No framework, npm package, server, database or API key is required.
 
-## How the monthly budget works
-1. Choose a month.
-2. Enter a spending limit and save it.
-3. Only expense transactions dated in that month count toward the budget.
-4. The progress bar shows the percentage used.
-5. At 80%, the app displays a warning. At 100% or more, it shows that the budget has been exceeded.
-6. Each month has its own saved budget.
+## Storage note
+Data is stored only in the browser and device where it is entered. It is not cloud-synchronised. Clearing browser data may delete transactions and budgets. Export CSV regularly to keep a backup.
 
-## How spending insights work
-The app groups expense transactions for the selected month by category, adds each category's amount, calculates its share of total monthly expenses, and displays the highest-spending category first. Income is not counted as spending.
+## Simple viva explanation
+- HTML creates page structure, forms, labels, navigation and content.
+- CSS controls layout, colours, spacing and responsive design with media queries.
+- JavaScript handles form submission, calculations, searching, filtering, editing, deleting and reports.
+- Arrays store transaction objects.
+- Objects store monthly and category budget values.
+- LocalStorage saves information in the browser.
+- `filter()` selects records, `reduce()` totals amounts, and `sort()` orders records.
+- CSV export converts transaction records into comma-separated text and downloads it.
 
-## Simple explanation for viva
-- HTML creates the page structure and forms.
-- CSS controls colours, spacing and mobile responsiveness.
-- JavaScript handles calculations and user interactions.
-- An array stores transaction objects.
-- An object stores each month's budget using the month as its key (for example, `2026-11`).
-- `filter()` selects the expenses for a month.
-- `reduce()` adds the amounts.
-- `sort()` arranges categories from highest to lowest spending.
-- Local Storage saves the data in the current browser.
+**Balance = Total Income − Total Expenses**
 
-**Balance = Total Income - Total Expenses**
+**Monthly net savings = Monthly Income − Monthly Expenses**
 
-## Important limitation
-Data is stored only in the same browser on the same device. It is not synced to an online account or cloud backup. Clearing browser data can remove saved transactions and budgets.
+## Limitations
+This is a client-side academic project. LocalStorage is not secure cloud storage and does not support user accounts or cross-device sync. The watermark is a visual attribution mark, not screenshot or copying protection.
