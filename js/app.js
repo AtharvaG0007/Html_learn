@@ -249,4 +249,34 @@ function updateReports() {
   });
 }
 function setupReports(){const input=document.getElementById("reportMonth");if(!input)return;input.value=currentMonth;input.addEventListener("change",updateReports);updateReports();}
+
+/* Load the next page in the background so navigation feels faster. */
+function setupFastNavigation() {
+  const prefetched = new Set();
+  function prefetchPage(link) {
+    if (!link || link.origin !== location.origin || !/\\.html(?:$|#)/.test(link.pathname + link.hash)) return;
+    const url = link.href.split("#")[0];
+    if (prefetched.has(url) || url === location.href.split("#")[0]) return;
+    prefetched.add(url);
+    const hint = document.createElement("link");
+    hint.rel = "prefetch";
+    hint.href = url;
+    hint.as = "document";
+    document.head.appendChild(hint);
+  }
+  document.addEventListener("pointerover", event => {
+    const link = event.target.closest("a[href]");
+    if (link) prefetchPage(link);
+  }, { passive: true });
+  document.addEventListener("focusin", event => {
+    const link = event.target.closest("a[href]");
+    if (link) prefetchPage(link);
+  });
+  document.addEventListener("touchstart", event => {
+    const link = event.target.closest("a[href]");
+    if (link) prefetchPage(link);
+  }, { passive: true });
+}
+
+setupFastNavigation();
 updateDashboard();setupTransactions();setupBudget();setupReports();
