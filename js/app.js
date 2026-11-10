@@ -19,12 +19,26 @@ if (!budgets || typeof budgets !== "object" || Array.isArray(budgets)) budgets =
 if (!categoryBudgets || typeof categoryBudgets !== "object" || Array.isArray(categoryBudgets)) categoryBudgets = {};
 transactions = transactions.filter(item => item && typeof item.id === "string" && typeof item.description === "string" && (item.type === "income" || item.type === "expense") && Number.isFinite(Number(item.amount)) && Number(item.amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(item.date));
 function saveData() {
+  const keys=[STORAGE_KEY,BUDGET_KEY,CATEGORY_KEY];
+  const oldValues=keys.map(key=>localStorage.getItem(key));
   try {
     localStorage.setItem(STORAGE_KEY,JSON.stringify(transactions));
     localStorage.setItem(BUDGET_KEY,JSON.stringify(budgets));
     localStorage.setItem(CATEGORY_KEY,JSON.stringify(categoryBudgets));
     return true;
-  } catch (error) { alert("Could not save data. Check browser storage space or privacy settings."); return false; }
+  } catch (error) {
+    keys.forEach((key,index)=>{
+      try {
+        if(oldValues[index]===null)localStorage.removeItem(key);
+        else localStorage.setItem(key,oldValues[index]);
+      } catch (restoreError) {}
+    });
+    transactions=loadData(STORAGE_KEY,[]);
+    budgets=loadData(BUDGET_KEY,{});
+    categoryBudgets=loadData(CATEGORY_KEY,{});
+    alert("Could not save changes. Your previous saved data has been kept. Check browser storage or privacy settings.");
+    return false;
+  }
 }
 function money(value) { return new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",minimumFractionDigits:2}).format(Number(value)||0); }
 function sum(items,type) { return items.filter(item => !type || item.type===type).reduce((total,item)=>total+Number(item.amount),0); }
@@ -94,10 +108,15 @@ function downloadCsv(items,filename) {
   if(!items.length){alert("There are no transactions to export.");return;}
   const columns=["Date","Description","Type","Category","Amount","Payment Method","Note"];
   const rows=items.map(item=>[item.date,item.description,item.type,item.category,item.amount,item.payment||"",item.note||""]);
-  const quote=value=>'"'+String(value??"").replace(/"/g,'""')+'"';
+  const quote=value=>{
+    let text=String(value??"");
+    if(/^[=+@\-\t\r]/.test(text))text="'"+text;
+    return '"'+text.replace(/"/g,'""')+'"';
+  };
   const csv=[columns,...rows].map(row=>row.map(quote).join(",")).join("\r\n");
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),link=document.createElement("a");
-  link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+  link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function updateBudgetPage() {
   const form=document.getElementById("monthlyBudgetForm");if(!form)return;
