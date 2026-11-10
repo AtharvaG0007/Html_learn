@@ -6,7 +6,7 @@ A multi-page, responsive personal expense tracker built with HTML5, CSS3 and beg
 - `index.html` — dashboard with balance, income, expenses, recent activity and monthly budget snapshot.
 - `transactions.html` — add, edit, delete, search, filter and export transactions.
 - `budget.html` — monthly and category-wise budgets with progress and warning states.
-- `reports.html` — monthly income/expense comparison, category breakdown and CSV export.
+- `reports.html` — monthly money insights, savings rate, top category, largest expense, average daily spending, month-over-month comparison, budget health and personalised recommendations.
 
 ## Features
 - Add income and expense records with description, amount, category, date, payment method and note.
@@ -16,7 +16,10 @@ A multi-page, responsive personal expense tracker built with HTML5, CSS3 and beg
 - Filter by transaction type and month.
 - Set monthly and category-wise spending limits.
 - See warnings at 80% and when a budget is exceeded.
-- Monthly category spending report and income-versus-expense bars.
+- Monthly money insights including savings rate, top spending category, largest expense and average daily spending.
+- Month-over-month expense comparison and monthly budget health.
+- Rule-based recommendations based on recorded spending patterns.
+- Responsive category spending breakdown.
 - Export all transactions or a selected month's transactions to CSV.
 - Save data in browser LocalStorage.
 - Responsive layout for mobile, tablet and desktop.
@@ -52,6 +55,7 @@ Data is stored only in the browser and device where it is entered. It is not clo
 - LocalStorage saves information in the browser.
 - `filter()` selects records, `reduce()` totals amounts, and `sort()` orders records.
 - CSV export converts transaction records into comma-separated text and downloads it.
+- Monthly insights use simple JavaScript calculations and conditional rules; they do not use AI or send personal data to a server.
 
 **Balance = Total Income − Total Expenses**
 
