@@ -244,5 +244,5 @@ function updateReports() {
     recommendations.appendChild(row);
   });
 }
-function setupReports(){const input=document.getElementById("reportMonth");if(!input)return;input.value=currentMonth;input.addEventListener("change",updateReports);document.getElementById("reportExport").addEventListener("click",()=>downloadCsv(monthItems(input.value),"pockettrack-"+input.value+".csv"));updateReports();}
+function setupReports(){const input=document.getElementById("reportMonth");if(!input)return;input.value=currentMonth;input.addEventListener("change",updateReports);updateReports();}
 updateDashboard();setupTransactions();setupBudget();setupReports();
