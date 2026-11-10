@@ -79,6 +79,35 @@ input:focus, select:focus, button:focus-visible { border-color: var(--primary); 
 .clear-button { min-height: 40px; margin-top: 18px; padding: 9px 13px; border: 1px solid #f0cbd0; border-radius: 8px; background: white; color: #d65361; cursor: pointer; }
 .clear-button:hover { background: #fff4f5; }
 footer { margin-top: 28px; text-align: center; color: #9aa1b1; font-size: 12px; }
+
+/* SiteCrafters ownership watermark: visual attribution, not screenshot protection. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  user-select: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='230' viewBox='0 0 340 230'%3E%3Cg transform='translate(170 115) rotate(-28)'%3E%3Ctext text-anchor='middle' dominant-baseline='middle' font-family='Arial,sans-serif' font-size='19' font-weight='700' letter-spacing='2' fill='%236658e8' fill-opacity='.12'%3ESITECRAFTERS%3C/text%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+.sitecrafters-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 28px;
+  padding: 17px 12px 5px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  color: #9299a9;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.sitecrafters-footer p { margin: 0; }
+.sitecrafters-footer .footer-brand { color: #69728a; font-size: 13px; }
+.sitecrafters-footer strong { color: var(--primary); letter-spacing: .3px; }
+
 @media (max-width: 800px) {
   .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .balance-card { grid-column: 1 / -1; }
