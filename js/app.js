@@ -123,16 +123,126 @@ function setupBudget() {
   updateBudgetPage();
 }
 function updateReports() {
-  const input=document.getElementById("reportMonth");if(!input)return;
-  const month=input.value||currentMonth,items=monthItems(month),income=sum(items,"income"),expense=sum(items,"expense");
-  document.getElementById("reportIncome").textContent=money(income);document.getElementById("reportExpense").textContent=money(expense);document.getElementById("reportSavings").textContent=money(income-expense);
-  const totals={};items.filter(item=>item.type==="expense").forEach(item=>totals[item.category]=(totals[item.category]||0)+item.amount);
-  const entries=Object.entries(totals).sort((a,b)=>b[1]-a[1]),list=document.getElementById("reportCategories");list.replaceChildren();
-  if(!entries.length)list.appendChild(make("p","empty","No expenses for this month."));
-  entries.forEach(([name,amount])=>{const row=make("div","bar-row"),head=make("div","bar-label");head.append(make("span","",name),make("strong","",money(amount)));const bar=make("div","bar"),fill=make("span");fill.style.width=(expense?amount/expense*100:0)+"%";bar.appendChild(fill);row.append(head,bar);list.appendChild(row);});
-  const chart=document.getElementById("incomeExpenseChart");chart.replaceChildren();
-  if(!income&&!expense)chart.appendChild(make("p","empty","Add transactions to see your comparison."));
-  else [{label:"Income",value:income,color:"var(--green)"},{label:"Expenses",value:expense,color:"var(--red)"}].forEach(item=>{const row=make("div","bar-row"),head=make("div","bar-label");head.append(make("span","",item.label),make("strong","",money(item.value)));const bar=make("div","bar"),fill=make("span");fill.style.width=(Math.max(income,expense)?item.value/Math.max(income,expense)*100:0)+"%";fill.style.background=item.color;bar.appendChild(fill);row.append(head,bar);chart.appendChild(row);});
+  const input=document.getElementById("reportMonth");
+  if(!input)return;
+  const month=input.value||currentMonth;
+  const items=monthItems(month);
+  const income=sum(items,"income");
+  const expense=sum(items,"expense");
+  const savings=income-expense;
+  const savingsRate=income?(savings/income)*100:0;
+
+  document.getElementById("reportIncome").textContent=money(income);
+  document.getElementById("reportExpense").textContent=money(expense);
+  document.getElementById("reportSavings").textContent=money(savings);
+  document.getElementById("reportSavingsRate").textContent=income?savingsRate.toFixed(1)+"%":"—";
+
+  const expenseItems=items.filter(item=>item.type==="expense");
+  const categoryTotals={};
+  expenseItems.forEach(item=>{
+    categoryTotals[item.category]=(categoryTotals[item.category]||0)+Number(item.amount);
+  });
+  const categoryEntries=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]);
+  const top=categoryEntries[0];
+  const topCategory=document.getElementById("topCategory");
+  const topDetail=document.getElementById("topCategoryDetail");
+  topCategory.textContent=top?top[0]:"No data yet";
+  topDetail.textContent=top?money(top[1])+" · "+(expense?((top[1]/expense)*100).toFixed(1):0)+"% of your expenses":"Add expenses to discover your top category.";
+
+  const largest=[...expenseItems].sort((a,b)=>Number(b.amount)-Number(a.amount))[0];
+  document.getElementById("largestExpense").textContent=largest?money(largest.amount):"No data yet";
+  document.getElementById("largestExpenseDetail").textContent=largest?largest.description+" · "+largest.category+" · "+largest.date:"Your biggest single expense will appear here.";
+
+  const year=Number(month.slice(0,4)),monthNumber=Number(month.slice(5,7));
+  const daysInMonth=new Date(year,monthNumber,0).getDate();
+  const todayMonth=currentMonth;
+  const daysCounted=month===todayMonth?Math.max(1,today.getDate()):daysInMonth;
+  document.getElementById("dailyAverage").textContent=money(expense/daysCounted);
+  document.getElementById("dailyAverageDetail").textContent="Based on "+daysCounted+" calendar day"+(daysCounted===1?"":"s")+" in the selected month.";
+
+  const previousDate=new Date(year,monthNumber-2,1);
+  const previousMonth=previousDate.getFullYear()+"-"+String(previousDate.getMonth()+1).padStart(2,"0");
+  const previousExpense=sum(monthItems(previousMonth),"expense");
+  const change=document.getElementById("expenseChange");
+  const changeDetail=document.getElementById("expenseChangeDetail");
+  const changeBar=document.getElementById("comparisonProgress");
+  if(previousExpense===0&&expense===0){
+    change.textContent="No change";
+    changeDetail.textContent="No expenses recorded in either selected or previous month.";
+    changeBar.style.width="0%";
+    changeBar.className="";
+  }else if(previousExpense===0){
+    change.textContent="New spending";
+    changeDetail.textContent="You recorded "+money(expense)+" in expenses. There was no spending recorded in "+previousMonth+".";
+    changeBar.style.width="100%";
+    changeBar.className="warn";
+  }else{
+    const difference=expense-previousExpense;
+    const percentage=Math.abs(difference/previousExpense*100);
+    change.textContent=(difference>0?"+":difference<0?"−":"")+percentage.toFixed(1)+"%";
+    changeDetail.textContent=difference>0?"Expenses increased by "+money(difference)+" compared with "+previousMonth+".":difference<0?"Expenses decreased by "+money(Math.abs(difference))+" compared with "+previousMonth+".":"Your expenses are the same as the previous month.";
+    changeBar.style.width=Math.min(percentage,100)+"%";
+    changeBar.className=difference>0?"warn":"";
+  }
+
+  const budgetLimit=Number(budgets[month])||0;
+  const budgetPercent=budgetLimit?expense/budgetLimit*100:0;
+  const budgetHealth=document.getElementById("budgetHealth");
+  const budgetDetail=document.getElementById("budgetHealthDetail");
+  const budgetBar=document.getElementById("insightBudgetProgress");
+  if(!budgetLimit){
+    budgetHealth.textContent="No budget set";
+    budgetDetail.textContent="Set a monthly budget to see how your spending compares.";
+    budgetBar.style.width="0%";
+    budgetBar.className="";
+  }else{
+    budgetHealth.textContent=budgetPercent.toFixed(0)+"% used";
+    budgetDetail.textContent=budgetPercent>=100?"You are "+money(expense-budgetLimit)+" over your budget.":money(budgetLimit-expense)+" remaining from your "+money(budgetLimit)+" limit.";
+    budgetBar.style.width=Math.min(budgetPercent,100)+"%";
+    budgetBar.className=budgetPercent>=100?"over":budgetPercent>=80?"warn":"";
+  }
+
+  const categoryList=document.getElementById("reportCategories");
+  categoryList.replaceChildren();
+  if(!categoryEntries.length){
+    categoryList.appendChild(make("p","empty","No expenses recorded for this month."));
+  }else{
+    categoryEntries.forEach(([name,amount])=>{
+      const row=make("div","bar-row");
+      const head=make("div","bar-label");
+      head.append(make("span","",name),make("strong","",money(amount)+" · "+(expense?amount/expense*100:0).toFixed(1)+"%"));
+      const bar=make("div","bar");
+      const fill=make("span");
+      fill.style.width=(expense?amount/expense*100:0)+"%";
+      bar.appendChild(fill);
+      row.append(head,bar);
+      categoryList.appendChild(row);
+    });
+  }
+
+  const recommendations=document.getElementById("reportRecommendations");
+  recommendations.replaceChildren();
+  const tips=[];
+  if(!items.length){
+    tips.push("No transactions found for this month. Add your income and expenses to unlock useful insights.");
+  }else{
+    if(savings<0)tips.push("Your expenses are higher than your income by "+money(Math.abs(savings))+". Review non-essential spending first.");
+    else if(income>0&&savingsRate>=20)tips.push("You saved "+savingsRate.toFixed(1)+"% of your income. Keep following the habits that helped you reach this.");
+    else if(income>0&&savingsRate>=0)tips.push("Your savings rate is "+savingsRate.toFixed(1)+"%. Try setting aside a small amount as soon as income arrives.");
+    if(top&&expense>0&&top[1]/expense>=0.4)tips.push(top[0]+" accounts for "+(top[1]/expense*100).toFixed(1)+"% of your spending. Check whether this category has any costs you can reduce.");
+    if(previousExpense>0&&expense>previousExpense*1.15)tips.push("Your spending is more than 15% higher than last month. Review recent purchases to find what changed.");
+    if(previousExpense>0&&expense<previousExpense*0.85)tips.push("Your spending is down by more than 15% compared with last month. Keep the sustainable changes going.");
+    if(budgetLimit&&budgetPercent>=100)tips.push("You have crossed your monthly budget. Pause optional purchases and review the remaining days of the month.");
+    else if(budgetLimit&&budgetPercent>=80)tips.push("You have used "+budgetPercent.toFixed(0)+"% of your budget. Set a smaller weekly spending limit for the rest of the month.");
+    if(largest&&expenseItems.length>1)tips.push("Your largest purchase was "+largest.description+" for "+money(largest.amount)+". Consider planning for similar large costs in advance.");
+    if(!tips.length)tips.push("Your spending looks steady based on the available records. Keep recording transactions so future insights become more useful.");
+  }
+  tips.forEach(tip=>{
+    const row=make("div","recommendation-item");
+    row.appendChild(make("span","recommendation-mark","✓"));
+    row.appendChild(make("p","",tip));
+    recommendations.appendChild(row);
+  });
 }
 function setupReports(){const input=document.getElementById("reportMonth");if(!input)return;input.value=currentMonth;input.addEventListener("change",updateReports);document.getElementById("reportExport").addEventListener("click",()=>downloadCsv(monthItems(input.value),"pockettrack-"+input.value+".csv"));updateReports();}
 updateDashboard();setupTransactions();setupBudget();setupReports();
