@@ -101,22 +101,7 @@ function setupTransactions() {
     if(button.dataset.action==="edit"){byId("editId").value=item.id;byId("description").value=item.description;byId("amount").value=item.amount;byId("type").value=item.type;byId("category").value=item.category;byId("date").value=item.date;byId("payment").value=item.payment||"Other";byId("note").value=item.note||"";byId("formTitle").textContent="Edit transaction";byId("saveTransaction").textContent="Update transaction";byId("cancelEdit").hidden=false;form.scrollIntoView({behavior:"smooth",block:"start"});}
   });
   search.addEventListener("input",render);type.addEventListener("change",render);month.addEventListener("change",render);
-  byId("exportCsv").addEventListener("click",()=>downloadCsv(transactions,"pockettrack-transactions.csv"));
   render();
-}
-function downloadCsv(items,filename) {
-  if(!items.length){alert("There are no transactions to export.");return;}
-  const columns=["Date","Description","Type","Category","Amount","Payment Method","Note"];
-  const rows=items.map(item=>[item.date,item.description,item.type,item.category,item.amount,item.payment||"",item.note||""]);
-  const quote=value=>{
-    let text=String(value??"");
-    if(/^[=+@\-\t\r]/.test(text))text="'"+text;
-    return '"'+text.replace(/"/g,'""')+'"';
-  };
-  const csv=[columns,...rows].map(row=>row.map(quote).join(",")).join("\r\n");
-  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),link=document.createElement("a");
-  link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function updateBudgetPage() {
   const form=document.getElementById("monthlyBudgetForm");if(!form)return;

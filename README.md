@@ -4,7 +4,7 @@ A multi-page, responsive personal expense tracker built with HTML5, CSS3 and beg
 
 ## Pages
 - `index.html` — dashboard with balance, income, expenses, recent activity and monthly budget snapshot.
-- `transactions.html` — add, edit, delete, search, filter and export transactions.
+- `transactions.html` — add, edit, delete, search and filter transactions.
 - `budget.html` — monthly and category-wise budgets with progress and warning states.
 - `reports.html` — monthly money insights, savings rate, top category, largest expense, average daily spending, month-over-month comparison, budget health and personalised recommendations.
 
@@ -20,7 +20,6 @@ A multi-page, responsive personal expense tracker built with HTML5, CSS3 and beg
 - Month-over-month expense comparison and monthly budget health.
 - Rule-based recommendations based on recorded spending patterns.
 - Responsive category spending breakdown.
-- Export all transactions or a selected month's transactions to CSV.
 - Save data in browser LocalStorage.
 - Responsive layout for mobile, tablet and desktop.
 - Consistent navigation across all four pages.
@@ -44,7 +43,7 @@ Html_learn/
 Download or clone the repository and open `index.html` in a modern browser. No framework, npm package, server, database or API key is required.
 
 ## Storage note
-Data is stored only in the browser and device where it is entered. It is not cloud-synchronised. Clearing browser data may delete transactions and budgets. Export CSV regularly to keep a backup.
+Data is stored only in the browser and device where it is entered. It is not cloud-synchronised. Clearing browser data may delete transactions and budgets. There is no built-in backup or cloud sync.
 
 ## Simple viva explanation
 - HTML creates page structure, forms, labels, navigation and content.
@@ -54,7 +53,6 @@ Data is stored only in the browser and device where it is entered. It is not clo
 - Objects store monthly and category budget values.
 - LocalStorage saves information in the browser.
 - `filter()` selects records, `reduce()` totals amounts, and `sort()` orders records.
-- CSV export converts transaction records into comma-separated text and downloads it.
 - Monthly insights use simple JavaScript calculations and conditional rules; they do not use AI or send personal data to a server.
 
 **Balance = Total Income − Total Expenses**
