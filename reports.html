@@ -1,15 +1,36 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#5b55d9"><meta name="description" content="A simple personal finance and expense tracker.">
-<title>Reports | PocketTrack</title><link rel="stylesheet" href="css/style.css"></head><body><div class="container">
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5b55d9"><meta name="description" content="Monthly spending insights, savings rate and personal finance recommendations.">
+<title>Money Insights | PocketTrack</title><link rel="stylesheet" href="css/style.css">
+</head>
+<body><div class="container">
 <header class="site-header"><div class="brand"><div class="logo" aria-hidden="true">₹</div><div><h1>PocketTrack</h1><p>Simple money management</p></div></div>
 <nav class="nav" aria-label="Main navigation">
-<a href="index.html" class="">Dashboard</a>
-<a href="transactions.html" class="">Transactions</a>
-<a href="budget.html" class="">Budget</a>
-<a href="reports.html" class="active">Reports</a></nav></header>
-<main><div class="page-heading"><h2>Monthly reports</h2><p>Understand your income, expenses and spending habits.</p></div>
-<section class="panel"><div class="form-grid"><div><label for="reportMonth">Select report month</label><input id="reportMonth" type="month"></div><div class="field-full"><div class="form-actions"><button class="button secondary" type="button" id="reportExport">Download this month's CSV</button></div></div></div></section>
-<section class="summary"><div class="summary-card"><p>Monthly income</p><h3 class="income" id="reportIncome">₹0.00</h3></div><div class="summary-card"><p>Monthly expenses</p><h3 class="expense" id="reportExpense">₹0.00</h3></div><div class="summary-card balance-card"><p>Net savings</p><h3 id="reportSavings">₹0.00</h3></div></section>
-<div class="grid-two"><section class="panel"><h3>Expenses by category</h3><div id="reportCategories"><p class="empty">No expenses for this month.</p></div></section><section class="panel"><h3>Income vs expenses</h3><div id="incomeExpenseChart"><p class="empty">Add transactions to see your comparison.</p></div><p class="notice">Net savings = monthly income − monthly expenses. A negative result means expenses were higher than income.</p></section></div>
-</main><footer class="site-footer">Designed &amp; Developed by <strong>SiteCrafters</strong> · Client Preview</footer></div><script src="js/app.js"></script></body></html>
+<a href="index.html">Dashboard</a><a href="transactions.html">Transactions</a><a href="budget.html">Budget</a><a href="reports.html" class="active" aria-current="page">Insights</a>
+</nav></header>
+<main>
+<div class="page-heading"><h2>Your money insights</h2><p>Understand your spending patterns and find practical ways to save more.</p></div>
+<section class="panel report-controls"><div><label for="reportMonth">Choose a month</label><input id="reportMonth" type="month"></div><div class="report-export"><button class="button secondary" type="button" id="reportExport">Download monthly CSV</button></div></section>
+<section class="insight-metrics" aria-label="Monthly financial summary">
+<div class="summary-card"><p>Income</p><h3 class="income" id="reportIncome">₹0.00</h3><small>Money received this month</small></div>
+<div class="summary-card"><p>Expenses</p><h3 class="expense" id="reportExpense">₹0.00</h3><small>Money spent this month</small></div>
+<div class="summary-card balance-card"><p>Net savings</p><h3 id="reportSavings">₹0.00</h3><small>Income minus expenses</small></div>
+<div class="summary-card"><p>Savings rate</p><h3 id="reportSavingsRate">—</h3><small>Share of income saved</small></div>
+</section>
+<section class="insight-grid" aria-label="Spending highlights">
+<article class="panel insight-card"><span class="insight-icon" aria-hidden="true">◉</span><p class="insight-label">Top spending category</p><h3 id="topCategory">No data yet</h3><p class="insight-detail" id="topCategoryDetail">Add expenses to discover where most of your money goes.</p></article>
+<article class="panel insight-card"><span class="insight-icon" aria-hidden="true">↗</span><p class="insight-label">Largest expense</p><h3 id="largestExpense">No data yet</h3><p class="insight-detail" id="largestExpenseDetail">Your biggest single expense will appear here.</p></article>
+<article class="panel insight-card"><span class="insight-icon" aria-hidden="true">▦</span><p class="insight-label">Average daily spending</p><h3 id="dailyAverage">₹0.00</h3><p class="insight-detail" id="dailyAverageDetail">Average expense per calendar day in the selected month.</p></article>
+</section>
+<section class="grid-two">
+<article class="panel"><h3>Month-over-month comparison</h3><div class="comparison-value" id="expenseChange">—</div><p class="muted" id="expenseChangeDetail">Select a month with transactions to compare.</p><div class="progress"><span id="comparisonProgress" style="width:0%"></span></div></article>
+<article class="panel"><h3>Budget health</h3><div class="comparison-value" id="budgetHealth">No budget set</div><p class="muted" id="budgetHealthDetail">Set a monthly budget to see how your spending compares.</p><div class="progress"><span id="insightBudgetProgress" style="width:0%"></span></div></article>
+</section>
+<section class="panel"><h3>Personalised recommendations</h3><p class="muted">These suggestions are calculated from the transactions saved in this browser.</p><div id="reportRecommendations" class="recommendation-list"><p class="empty">Add transactions to receive spending insights.</p></div></section>
+<section class="panel"><h3>Where your money goes</h3><p class="muted">Expense share by category for the selected month.</p><div id="reportCategories"><p class="empty">No expenses for this month.</p></div></section>
+<section class="panel"><p class="notice">How to read this page: net savings = income − expenses. Savings rate = net savings ÷ income. Month comparisons use the previous calendar month. Insights are guidance based on your recorded data, not financial advice.</p></section>
+</main>
+<footer class="site-footer">Designed &amp; Developed by <strong>SiteCrafters</strong> · Client Preview</footer>
+</div><script src="js/app.js"></script></body></html>
