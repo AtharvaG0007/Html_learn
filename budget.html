@@ -1,10 +1,13 @@
 <!-- Budget page: set one overall monthly limit and optional category limits. -->
+<!-- Budget page: set a total monthly limit and optional category limits. -->
 <!DOCTYPE html>
 <html lang="en"><!-- Browser settings, page title and shared CSS design. -->
+<!-- Browser settings, page title and shared visual design. -->
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2563eb"><meta name="description" content="A simple personal finance and expense tracker.">
 <title>Budget | PocketTrack</title><link rel="stylesheet" href="css/style.css"></head><body><div class="container">
 <!-- Shared brand and navigation links. -->
+<!-- Shared header: logo and links to the other PocketTrack pages. -->
 <header class="site-header"><div class="brand"><div class="logo" aria-hidden="true">₹</div><div><h1>PocketTrack</h1><p>Simple money management</p></div></div>
 <nav class="nav" aria-label="Main navigation">
 <a href="index.html" class="">Dashboard</a>
@@ -13,9 +16,12 @@
 <a href="reports.html" class="">Insights</a></nav></header>
 <main><div class="page-heading"><h2>Budget planner</h2><p>Set a monthly spending limit and category-wise limits.</p></div>
 <!-- This form saves the spending limit for the month selected by the visitor. -->
+<!-- This form saves one spending limit for the selected month. -->
 <section class="panel"><h3>Monthly budget</h3><form id="monthlyBudgetForm"><div class="form-grid"><div><label for="budgetMonth">Month</label><input id="budgetMonth" type="month" required></div><div><label for="budgetAmount">Monthly limit (₹)</label><input id="budgetAmount" type="number" min="1" step="0.01" placeholder="e.g. 15000" required></div></div><div class="form-actions"><button class="button" type="submit">Save monthly budget</button></div><p class="status" id="budgetFeedback" role="status"></p></form>
 <div class="budget-row"><div class="budget-row-head"><span>Spent this month</span><strong id="budgetSpent">₹0.00</strong></div><div class="budget-row-head"><span>Budget remaining</span><strong id="budgetRemaining">Not set</strong></div><div class="progress"><span id="budgetProgress" style="width:0%"></span></div><p class="status" id="budgetStatus">Choose a month and set your budget.</p></div></section>
 <!-- This form saves a separate limit for one spending category. -->
+<!-- This form saves a separate spending limit for one category. -->
 <section class="panel"><h3>Category budget</h3><form id="categoryBudgetForm"><div class="form-grid"><div><label for="categoryBudgetMonth">Month</label><input id="categoryBudgetMonth" type="month" required></div><div><label for="budgetCategory">Category</label><select id="budgetCategory"><option>Food</option><option>Travel</option><option>Shopping</option><option>Education</option><option>Bills</option><option>Health</option><option>Entertainment</option><option>Other</option></select></div><div><label for="categoryBudgetAmount">Category limit (₹)</label><input id="categoryBudgetAmount" type="number" min="1" step="0.01" required placeholder="e.g. 3000"></div></div><div class="form-actions"><button class="button" type="submit">Save category limit</button></div></form><div id="categoryBudgetList"><p class="empty">No category budgets set for this month.</p></div></section>
 </main><!-- Footer and shared JavaScript file. -->
+<!-- Shared footer and JavaScript file used by all pages. -->
 <footer class="site-footer">Designed &amp; Developed by <strong>SiteCrafters</strong> · Client Preview</footer></div><script src="js/app.js"></script></body></html>
