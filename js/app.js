@@ -1,4 +1,6 @@
 // PocketTrack: shared JavaScript for all pages (optimized).
+// 1) STORAGE AND SHARED HELPERS
+// These small helpers are reused by the four pages. The page is detected by checking which HTML elements exist.
 const KEYS = { tx: "pocketTrackTransactions", budget: "pocketTrackBudgets", cat: "pocketTrackCategoryBudgets" };
 const pad = n => String(n).padStart(2, "0"), now = new Date(), fmt = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 });
 const todayText = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, currentMonth = todayText.slice(0, 7);
@@ -13,18 +15,24 @@ const make = (tag, cls, text) => { const el = document.createElement(tag); el.cl
 const btn = (text, cls, data) => { const b = make("button", "button " + cls, text); b.type = "button"; Object.assign(b.dataset, data); return b; };
 const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
 const asObj = v => (v && typeof v === "object" && !Array.isArray(v) ? v : {});
+// Read saved transactions and budgets when the app opens. Invalid transaction records are ignored.
 function loadAll() { const list = load(KEYS.tx); transactions = (Array.isArray(list) ? list : []).filter(i => i && typeof i.id === "string" && typeof i.description === "string"
     && ["income", "expense"].includes(i.type) && Number.isFinite(Number(i.amount)) && Number(i.amount) > 0 && validDate(i.date)); budgets = asObj(load(KEYS.budget)); categoryBudgets = asObj(load(KEYS.cat)); }
+// Save all three data groups together. If saving fails, try to restore the previous browser data.
 function saveData() { const keys = Object.values(KEYS), data = [transactions, budgets, categoryBudgets]; let old = [];
   try { old = keys.map(k => localStorage.getItem(k)); keys.forEach((k, i) => localStorage.setItem(k, JSON.stringify(data[i]))); return true; } catch {
     keys.forEach((k, i) => { try { if (old[i] === null) localStorage.removeItem(k); else if (old[i] !== undefined) localStorage.setItem(k, old[i]); } catch {} });
     loadAll(); alert("Could not save changes. Your previous saved data has been kept. Check browser storage or privacy settings."); return false; } }
+// After a transaction changes, refresh every summary that depends on it.
 const refreshAll = () => { updateDashboard(); updateBudgetPage(); updateReports(); };
+// Build one transaction row using HTML elements (not raw HTML) so user-entered text stays safe.
 function transactionRow(item, actions = false) { const row = make("div", "transaction"), info = make("div", "transaction-info"), side = make("div", "transaction-side");
   info.append(make("div", "transaction-title", item.description), make("div", "transaction-meta", `${item.category} · ${item.date} · ${item.payment || "Other"}${item.note ? " · " + item.note : ""}`));
   side.appendChild(make("span", "transaction-amount " + item.type, (item.type === "income" ? "+ " : "− ") + money(item.amount)));
   if (actions) { const box = make("div", "transaction-actions"); box.append(btn("Edit", "secondary small", { action: "edit", id: item.id }), btn("Delete", "danger small", { action: "delete", id: item.id })); side.appendChild(box); }
   row.append(info, side); return row; }
+// 2) DASHBOARD
+// Calculate totals and show the five newest transactions plus this month's budget progress.
 function updateDashboard() { if (!$("balance")) return;
   const income = sum(transactions, "income"), expense = sum(transactions, "expense"), latest = [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
   const spent = sum(monthItems(currentMonth), "expense"), limit = Number(budgets[currentMonth]) || 0, pct = limit ? spent / limit * 100 : 0;
@@ -32,6 +40,8 @@ function updateDashboard() { if (!$("balance")) return;
     dashboardMonth: new Date(currentMonth + "-01T12:00:00").toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
     dashboardBudgetStatus: !limit ? "Set a monthly budget to track your spending." : pct >= 100 ? "You have exceeded your monthly budget." : `You have used ${pct.toFixed(0)}% of your budget.` });
   $("recentTransactions").replaceChildren(...(latest.length ? latest.map(i => transactionRow(i)) : [make("p", "empty", "No transactions yet. Add your first transaction.")])); setBar($("dashboardProgress"), pct); }
+// 3) TRANSACTIONS PAGE
+// Connect the form, search box, filters, Edit buttons and Delete buttons to their actions.
 function setupTransactions() { const form = $("transactionForm"); if (!form) return;
   const list = $("transactionList"), search = $("searchTransactions"), type = $("filterType"), month = $("filterMonth"), feedback = $("transactionFeedback");
   const fields = ["description", "amount", "type", "category", "date", "payment", "note"]; $("date").value = todayText; function render() {
@@ -52,6 +62,8 @@ function setupTransactions() { const form = $("transactionForm"); if (!form) ret
     $("editId").value = item.id; fields.forEach(f => ($(f).value = item[f] || (f === "payment" ? "Other" : "")));
     setTexts({ formTitle: "Edit transaction", saveTransaction: "Update transaction" }); $("cancelEdit").hidden = false; form.scrollIntoView({ behavior: "smooth", block: "start" }); });
   [search, type, month].forEach(el => el.addEventListener(el === search ? "input" : "change", render)); render(); }
+// 4) BUDGET PAGE
+// Work out spending and remaining money for the selected month and each category.
 function updateBudgetPage() { if (!$("monthlyBudgetForm")) return; const month = $("budgetMonth").value || currentMonth, items = monthItems(month), spent = sum(items, "expense");
   const limit = Number(budgets[month]) || 0, pct = limit ? spent / limit * 100 : 0, remaining = limit - spent, status = $("budgetStatus"); $("budgetAmount").value = limit || "";
   setTexts({ budgetSpent: money(spent), budgetRemaining: limit ? money(Math.abs(remaining)) + (remaining < 0 ? " over" : "") : "Not set",
@@ -62,6 +74,7 @@ function updateBudgetPage() { if (!$("monthlyBudgetForm")) return; const month =
     head.append(make("span", "", name), make("strong", "", `${money(total)} / ${money(cap)}`)); setBar(fill, used); progress.appendChild(fill);
     row.append(head, progress, make("p", "status " + statusClass(used), used >= 100 ? "Category limit exceeded." : used >= 80 ? "Close to category limit." : `${money(Math.max(cap - total, 0))} remaining.`), btn("Remove limit", "danger small", { category: name, month }));
     return row; }) : [make("p", "empty", "No category budgets set for this month.")])); }
+// Connect both budget forms. The submit events save values; change/click events refresh the display.
 function setupBudget() { const form = $("monthlyBudgetForm"); if (!form) return;
   const month = $("budgetMonth"), catMonth = $("categoryBudgetMonth"), catForm = $("categoryBudgetForm"), valid = (k, a) => k && Number.isFinite(a) && a > 0; month.value = catMonth.value = currentMonth;
   form.addEventListener("submit", e => { e.preventDefault(); const key = month.value, amount = Number($("budgetAmount").value); if (!valid(key, amount)) return; budgets[key] = amount;
@@ -71,6 +84,8 @@ function setupBudget() { const form = $("monthlyBudgetForm"); if (!form) return;
   catMonth.addEventListener("change", () => { month.value = catMonth.value; updateBudgetPage(); }); $("categoryBudgetList").addEventListener("click", e => {
     const b = e.target.closest("button[data-category]"), m = b && b.dataset.month; if (!b || !categoryBudgets[m]) return;
     delete categoryBudgets[m][b.dataset.category]; if (!Object.keys(categoryBudgets[m]).length) delete categoryBudgets[m]; saveData(); updateBudgetPage(); }); updateBudgetPage(); }
+// 5) INSIGHTS PAGE
+// Calculate monthly totals, category shares, comparisons and simple rule-based suggestions.
 function updateReports() { const input = $("reportMonth"); if (!input) return; const month = input.value || currentMonth, items = monthItems(month), income = sum(items, "income"), expense = sum(items, "expense");
   const savings = income - expense, rate = income ? savings / income * 100 : 0, pctOf = v => (expense ? v / expense * 100 : 0); const expenses = items.filter(i => i.type === "expense"), totals = {};
   expenses.forEach(i => (totals[i.category] = (totals[i.category] || 0) + Number(i.amount)));
@@ -99,9 +114,14 @@ function updateReports() { const input = $("reportMonth"); if (!input) return; c
     largest && expenses.length > 1 && `Your largest purchase was ${largest.description} for ${money(largest.amount)}. Consider planning for similar large costs in advance.`].filter(Boolean);
   if (items.length && !tips.length) tips.push("Your spending looks steady based on the available records. Keep recording transactions so future insights become more useful.");
   $("reportRecommendations").replaceChildren(...tips.map(t => { const row = make("div", "recommendation-item"); row.append(make("span", "recommendation-mark", "✓"), make("p", "", t)); return row; })); }
+// When the month selector changes, calculate the report again for that month.
 function setupReports() { const input = $("reportMonth"); if (!input) return; input.value = currentMonth; input.addEventListener("change", updateReports); updateReports(); }
+// 6) OPTIONAL SPEED-UP
+// Ask the browser to quietly prepare same-site HTML pages when a visitor points to a link.
 function setupFastNavigation() { const seen = new Set([location.href.split("#")[0]]); const prefetch = e => { const a = e.target.closest?.("a[href]"), url = a && a.href.split("#")[0];
     if (!a || a.origin !== location.origin || !a.pathname.endsWith(".html") || seen.has(url)) return;
     seen.add(url); document.head.appendChild(Object.assign(document.createElement("link"), { rel: "prefetch", href: url, as: "document" })); };
   ["pointerover", "focusin", "touchstart"].forEach(t => document.addEventListener(t, prefetch, { passive: true })); }
+// 7) START THE APP
+// First load saved data, then connect page events and draw whichever page is currently open.
 loadAll(); setupFastNavigation(); updateDashboard(); setupTransactions(); setupBudget(); setupReports();
