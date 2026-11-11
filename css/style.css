@@ -1,25 +1,42 @@
+/* 1. Global settings: shared colours, fonts and sizing rules. */
 *{box-sizing:border-box} :root{--primary:#2563eb;--primary-dark:#1d4ed8;--ink:#202943;--muted:#778198;--line:#e8ebf2;--bg:#f4f6fb;--green:#159b72;--red:#df5362;--card:#fff}
+/* 2. Page layout: main wrapper, header, logo and navigation. */
+
 body{margin:0;padding:26px 16px 40px;background:var(--bg);color:var(--ink);font-family:Arial,sans-serif;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation}.container{width:100%;max-width:1120px;margin:auto}
 .site-header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:26px}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:var(--primary);color:#fff;font-size:25px;font-weight:bold}.brand h1{margin:0;font-size:23px}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
 .nav{display:flex;flex-wrap:wrap;gap:7px}.nav a{padding:10px 13px;border-radius:9px;text-decoration:none;color:#59647b;font-size:13px;font-weight:bold}.nav a:hover,.nav a.active{background:#dbeafe;color:var(--primary)}
 .page-heading{margin:0 0 20px}.page-heading h2{margin:0 0 6px;font-size:25px}.page-heading p{margin:0;color:var(--muted);font-size:14px}
+/* 3. Cards, panels and the dashboard grid. */
+
 .summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-bottom:20px}.summary-card,.panel{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:0 5px 20px rgba(30,40,80,.05)}.summary-card{padding:20px}.summary-card p{margin:0;color:var(--muted);font-size:13px}.summary-card h3{margin:12px 0 5px;font-size:clamp(20px,2.5vw,27px);overflow-wrap:anywhere}.summary-card small{color:#9aa1b1;font-size:12px}.balance-card{background:var(--primary);color:#fff}.balance-card p,.balance-card small{color:#dbeafe}.income{color:var(--green)}.expense{color:var(--red)}
 .grid-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}.panel{padding:22px;margin-bottom:18px}.panel h3{margin:0 0 16px;font-size:17px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.panel-head h3{margin:0}
+/* 4. Form fields, buttons and keyboard focus styles. */
+
 label{display:block;margin:13px 0 7px;color:#4d5870;font-size:13px;font-weight:bold}input,select,textarea{width:100%;min-width:0;min-height:43px;padding:10px 12px;border:1px solid #dfe4ed;border-radius:9px;background:#fff;color:var(--ink);font-size:14px;outline:none}textarea{min-height:76px;resize:vertical}input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #2563eb33;outline-offset:2px;border-color:var(--primary)}
 .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}.field-full{grid-column:1/-1}.button{display:inline-flex;justify-content:center;align-items:center;min-height:42px;padding:10px 15px;border:0;border-radius:9px;background:var(--primary);color:white;font-size:13px;font-weight:bold;text-decoration:none}.button:hover{background:var(--primary-dark)}.button.secondary{background:#eff6ff;color:var(--primary)}.button.danger{background:#fff0f1;color:var(--red)}.button.small{min-height:34px;padding:7px 10px;font-size:12px}.form-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:17px}
+/* 5. Transaction rows, filters, progress bars and budget messages. */
+
 .muted{color:var(--muted);font-size:13px}.empty{padding:24px 8px;text-align:center;color:#9299a9;font-size:13px}
 .transaction{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #edf0f5}.transaction:last-child{border-bottom:0}.transaction-info{min-width:0}.transaction-title{font-weight:bold;font-size:14px;overflow-wrap:anywhere}.transaction-meta{margin-top:5px;color:var(--muted);font-size:12px}.transaction-side{display:flex;align-items:center;gap:10px;flex:0 0 auto}.transaction-amount{font-size:13px;font-weight:bold;white-space:nowrap}.transaction-actions{display:flex;gap:5px}
 .toolbar{display:grid;grid-template-columns:minmax(0,1fr) 170px 170px;gap:9px;margin-bottom:14px}.progress{height:9px;border-radius:20px;background:#eef0f5;overflow:hidden;margin-top:10px}.progress span{display:block;height:100%;border-radius:inherit;background:var(--green)}.progress span.warn{background:#e4a13c}.progress span.over{background:var(--red)}.budget-row{padding:14px 0;border-bottom:1px solid var(--line)}.budget-row:last-child{border-bottom:0}.budget-row-head{display:flex;justify-content:space-between;gap:12px;font-size:13px}.budget-row-head strong{white-space:nowrap}.status{margin:8px 0 0;font-size:12px;color:var(--muted)}.status.warn{color:#a66a13}.status.over{color:var(--red);font-weight:bold}
+/* 6. Reports, notices and footer. */
+
 .bar-row{margin:14px 0}.bar-label{display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:7px}.bar{height:9px;border-radius:20px;background:#eef0f5;overflow:hidden}.bar span{display:block;height:100%;background:var(--primary);border-radius:inherit}
 .notice{padding:12px 14px;border-radius:10px;background:#eff6ff;color:#1d4ed8;font-size:13px;line-height:1.5}.site-footer{padding:18px 8px;text-align:center;color:#9299a9;font-size:12px;border-top:1px solid var(--line)}.site-footer strong{color:var(--primary)}
+/* 7. Responsive layout: rearrange columns for tablets and phones. */
+
 @media(max-width:800px){.site-header{align-items:flex-start;flex-direction:column}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.balance-card{grid-column:1/-1}.grid-two{grid-template-columns:1fr}}
 @media(max-width:520px){body{padding:18px 11px 30px}.brand h1{font-size:20px}.nav{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}.nav a{text-align:center;padding:10px 4px;font-size:11px}.summary{gap:9px}.summary-card{padding:15px;border-radius:12px}.panel{padding:17px;border-radius:12px}.page-heading h2{font-size:22px}.form-grid{grid-template-columns:1fr}.field-full{grid-column:auto}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.transaction{align-items:flex-start}.transaction-side{align-items:flex-end;flex-direction:column;gap:6px}.transaction-actions{flex-wrap:wrap}.transaction-amount{font-size:12px}}
 @media(max-width:360px){.summary-card{padding:12px}.summary-card h3{font-size:18px}.nav a{font-size:10px}}
+/* 8. Respect visitors who prefer reduced motion. */
+
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+/* 9. Client-preview watermark. This is visual branding, not copy protection. */
 /* Repeating attribution watermark for client-preview screenshots. */
 body:after{content:"";position:fixed;inset:0;z-index:1000;pointer-events:none;user-select:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='340' height='230'%3E%3Ctext x='170' y='115' text-anchor='middle' transform='rotate(-28 170 115)' font-family='Arial' font-size='18' font-weight='bold' letter-spacing='2' fill='%232563eb' fill-opacity='.10'%3ESITECRAFTERS%3C/text%3E%3C/svg%3E");background-repeat:repeat}
 
+/* 10. Extra styles used only by the Insights page. */
 /* Monthly money insights */
 .report-controls{display:flex;align-items:end;justify-content:space-between;gap:18px}.report-controls>div:first-child{width:min(100%,320px)}.report-export{padding-bottom:0}
 .insight-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
