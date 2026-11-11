@@ -61,3 +61,41 @@ Data is stored only in the browser and device where it is entered. It is not clo
 
 ## Limitations
 This is a client-side academic project. LocalStorage is not secure cloud storage and does not support user accounts or cross-device sync. The watermark is a visual attribution mark, not screenshot or copying protection.
+
+
+## How the files work together (simple guide)
+
+Think of the project as three parts working as a team:
+
+- **HTML files are the rooms.** They create the visible headings, cards, buttons, forms and navigation.
+- **`css/style.css` is the decoration.** It controls colours, spacing, card shapes and how pages fit on phones and computers.
+- **`js/app.js` is the helper.** It reads what visitors enter, saves it in the browser, does the calculations and updates the page.
+
+## How JavaScript connects to HTML
+
+JavaScript finds an HTML element by its `id`. For example, `$("balance")` finds the element with `id="balance"` on the Dashboard. The `setText()` helper changes the words inside it. Each page has different elements, so a setup function first checks whether its form exists. This lets all pages share the same `app.js` file.
+
+### What happens when a visitor adds a transaction?
+
+1. The visitor fills in the form on `transactions.html`.
+2. The browser fires the form's `submit` event.
+3. `setupTransactions()` reads the fields and checks the amount and date.
+4. The new record is added to the `transactions` array.
+5. `saveData()` stores the data in browser LocalStorage.
+6. `done()` redraws the transaction list and calls `refreshAll()`.
+7. `refreshAll()` updates the Dashboard, Budget and Insights calculations.
+
+### Main JavaScript functions
+
+| Function | What it does |
+| --- | --- |
+| `loadAll()` | Reads saved transactions and budgets when a page opens. |
+| `saveData()` | Saves the current data in the browser. |
+| `transactionRow()` | Builds the visible row for one transaction. |
+| `updateDashboard()` | Updates balance, income, expenses and recent activity. |
+| `setupTransactions()` | Connects the transaction form, search, filters and action buttons. |
+| `updateBudgetPage()` / `setupBudget()` | Displays and saves monthly and category limits. |
+| `updateReports()` / `setupReports()` | Calculates and displays the selected month's insights. |
+| `setupFastNavigation()` | Hints to the browser that a linked page may be opened next. |
+
+Comments in the HTML, CSS and JavaScript explain the main sections and how the pieces connect. Comments are notes for people reading the code; they do not change how the app runs.
