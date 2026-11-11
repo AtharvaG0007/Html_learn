@@ -1,282 +1,107 @@
-// PocketTrack: shared, beginner-friendly JavaScript for all pages.
-const STORAGE_KEY = "pocketTrackTransactions";
-const BUDGET_KEY = "pocketTrackBudgets";
-const CATEGORY_KEY = "pocketTrackCategoryBudgets";
-const categories = ["Food","Travel","Shopping","Education","Bills","Salary","Health","Entertainment","Other"];
-const today = new Date();
-const todayText = [today.getFullYear(),String(today.getMonth()+1).padStart(2,"0"),String(today.getDate()).padStart(2,"0")].join("-");
-const currentMonth = todayText.slice(0,7);
-
-function loadData(key, fallback) {
-  try { const value = JSON.parse(localStorage.getItem(key)); return value ?? fallback; }
-  catch (error) { return fallback; }
-}
-let transactions = loadData(STORAGE_KEY, []);
-let budgets = loadData(BUDGET_KEY, {});
-let categoryBudgets = loadData(CATEGORY_KEY, {});
-if (!Array.isArray(transactions)) transactions = [];
-if (!budgets || typeof budgets !== "object" || Array.isArray(budgets)) budgets = {};
-if (!categoryBudgets || typeof categoryBudgets !== "object" || Array.isArray(categoryBudgets)) categoryBudgets = {};
-transactions = transactions.filter(item => item && typeof item.id === "string" && typeof item.description === "string" && (item.type === "income" || item.type === "expense") && Number.isFinite(Number(item.amount)) && Number(item.amount) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(item.date));
-function saveData() {
-  const keys=[STORAGE_KEY,BUDGET_KEY,CATEGORY_KEY];
-  const oldValues=keys.map(key=>localStorage.getItem(key));
-  try {
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(transactions));
-    localStorage.setItem(BUDGET_KEY,JSON.stringify(budgets));
-    localStorage.setItem(CATEGORY_KEY,JSON.stringify(categoryBudgets));
-    return true;
-  } catch (error) {
-    keys.forEach((key,index)=>{
-      try {
-        if(oldValues[index]===null)localStorage.removeItem(key);
-        else localStorage.setItem(key,oldValues[index]);
-      } catch (restoreError) {}
-    });
-    transactions=loadData(STORAGE_KEY,[]);
-    budgets=loadData(BUDGET_KEY,{});
-    categoryBudgets=loadData(CATEGORY_KEY,{});
-    alert("Could not save changes. Your previous saved data has been kept. Check browser storage or privacy settings.");
-    return false;
-  }
-}
-function money(value) { return new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",minimumFractionDigits:2}).format(Number(value)||0); }
-function sum(items,type) { return items.filter(item => !type || item.type===type).reduce((total,item)=>total+Number(item.amount),0); }
-function monthItems(month) { return transactions.filter(item=>item.date.slice(0,7)===month); }
-function make(tag,className,text) { const element=document.createElement(tag); if(className) element.className=className; if(text!==undefined) element.textContent=text; return element; }
-function addText(parent,tag,className,text) { const element=make(tag,className,text); parent.appendChild(element); return element; }
-function transactionRow(item,actions=false) {
-  const row=make("div","transaction"), info=make("div","transaction-info");
-  addText(info,"div","transaction-title",item.description);
-  addText(info,"div","transaction-meta",item.category+" · "+item.date+" · "+(item.payment||"Other")+(item.note?" · "+item.note:""));
-  const side=make("div","transaction-side");
-  addText(side,"span","transaction-amount "+(item.type==="income"?"income":"expense"),(item.type==="income"?"+ ":"− ")+money(item.amount));
-  if(actions){const buttons=make("div","transaction-actions");const edit=make("button","button secondary small","Edit");edit.type="button";edit.dataset.action="edit";edit.dataset.id=item.id;const del=make("button","button danger small","Delete");del.type="button";del.dataset.action="delete";del.dataset.id=item.id;buttons.append(edit,del);side.appendChild(buttons);}
-  row.append(info,side);return row;
-}
-function updateDashboard() {
-  const balance=document.getElementById("balance"); if(!balance)return;
-  const income=sum(transactions,"income"),expense=sum(transactions,"expense");
-  balance.textContent=money(income-expense);document.getElementById("totalIncome").textContent=money(income);document.getElementById("totalExpense").textContent=money(expense);
-  const recent=document.getElementById("recentTransactions");recent.replaceChildren();
-  const latest=[...transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
-  if(!latest.length) recent.appendChild(make("p","empty","No transactions yet. Add your first transaction."));
-  latest.forEach(item=>recent.appendChild(transactionRow(item)));
-  const spent=sum(monthItems(currentMonth),"expense"),limit=Number(budgets[currentMonth])||0,percent=limit?spent/limit*100:0;
-  document.getElementById("dashboardMonth").textContent=new Date(currentMonth+"-01T12:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
-  document.getElementById("dashboardSpent").textContent=money(spent);
-  const bar=document.getElementById("dashboardProgress");bar.style.width=Math.min(percent,100)+"%";bar.className=percent>=100?"over":percent>=80?"warn":"";
-  document.getElementById("dashboardBudgetStatus").textContent=limit?(percent>=100?"You have exceeded your monthly budget.":percent>=80?"You have used "+percent.toFixed(0)+"% of your budget.":"You have used "+percent.toFixed(0)+"% of your budget."):"Set a monthly budget to track your spending.";
-}
-function fillMonthOptions(select,selected) {
-  const months=[...new Set(transactions.map(item=>item.date.slice(0,7)))].sort().reverse();
-  select.replaceChildren();const all=document.createElement("option");all.value="all";all.textContent="All months";select.appendChild(all);
-  months.forEach(month=>{const option=document.createElement("option");option.value=month;option.textContent=month;select.appendChild(option);});
-  select.value=selected||"all";
-}
-function setupTransactions() {
-  const form=document.getElementById("transactionForm");if(!form)return;
-  const byId=id=>document.getElementById(id),feedback=byId("transactionFeedback");
-  byId("date").value=todayText;
-  const list=byId("transactionList"),search=byId("searchTransactions"),type=byId("filterType"),month=byId("filterMonth");
-  function render() {
-    const query=search.value.trim().toLowerCase();fillMonthOptions(month,month.value);
-    const filtered=[...transactions].filter(item=>(type.value==="all"||item.type===type.value)&&(month.value==="all"||item.date.startsWith(month.value))&&(item.description+" "+item.category+" "+(item.note||"")).toLowerCase().includes(query)).sort((a,b)=>b.date.localeCompare(a.date));
-    list.replaceChildren();if(!filtered.length){list.appendChild(make("p","empty","No matching transactions found."));return;}
-    filtered.forEach(item=>list.appendChild(transactionRow(item,true)));
-  }
-  function resetForm(){form.reset();byId("editId").value="";byId("date").value=todayText;byId("formTitle").textContent="Add a transaction";byId("saveTransaction").textContent="Save transaction";byId("cancelEdit").hidden=true;}
-  form.addEventListener("submit",event=>{
-    event.preventDefault();const id=byId("editId").value,description=byId("description").value.trim(),amount=Number(byId("amount").value),date=byId("date").value;
-    if(!description||!Number.isFinite(amount)||amount<=0||!date){feedback.textContent="Enter a valid description, amount and date.";return;}
-    const record={id:id||String(Date.now())+"-"+Math.random().toString(16).slice(2),description,amount,type:byId("type").value,category:byId("category").value,date,payment:byId("payment").value,note:byId("note").value.trim()};
-    if(id) transactions=transactions.map(item=>item.id===id?record:item);else transactions.push(record);
-    if(saveData()){feedback.textContent=id?"Transaction updated.":"Transaction saved.";resetForm();render();updateDashboard();updateBudgetPage();updateReports();}
-  });
-  byId("cancelEdit").addEventListener("click",resetForm);
-  list.addEventListener("click",event=>{
-    const button=event.target.closest("button[data-action]");if(!button)return;
-    const item=transactions.find(record=>record.id===button.dataset.id);if(!item)return;
-    if(button.dataset.action==="delete"&&confirm("Delete this transaction?")){transactions=transactions.filter(record=>record.id!==item.id);if(saveData()){render();updateDashboard();updateBudgetPage();updateReports();}}
-    if(button.dataset.action==="edit"){byId("editId").value=item.id;byId("description").value=item.description;byId("amount").value=item.amount;byId("type").value=item.type;byId("category").value=item.category;byId("date").value=item.date;byId("payment").value=item.payment||"Other";byId("note").value=item.note||"";byId("formTitle").textContent="Edit transaction";byId("saveTransaction").textContent="Update transaction";byId("cancelEdit").hidden=false;form.scrollIntoView({behavior:"smooth",block:"start"});}
-  });
-  search.addEventListener("input",render);type.addEventListener("change",render);month.addEventListener("change",render);
-  render();
-}
-function updateBudgetPage() {
-  const form=document.getElementById("monthlyBudgetForm");if(!form)return;
-  const month=document.getElementById("budgetMonth").value||currentMonth,items=monthItems(month),spent=sum(items,"expense"),limit=Number(budgets[month])||0,percent=limit?spent/limit*100:0,remaining=limit-spent;
-  document.getElementById("budgetAmount").value=limit||"";
-  document.getElementById("budgetSpent").textContent=money(spent);document.getElementById("budgetRemaining").textContent=limit?money(Math.abs(remaining))+(remaining<0?" over":""):"Not set";
-  const bar=document.getElementById("budgetProgress");bar.style.width=Math.min(percent,100)+"%";bar.className=percent>=100?"over":percent>=80?"warn":"";
-  const status=document.getElementById("budgetStatus");status.className="status "+(percent>=100?"over":percent>=80?"warn":"");
-  status.textContent=!limit?"Set a monthly budget to begin.":percent>=100?"Budget exceeded by "+money(spent-limit)+".":percent>=80?percent.toFixed(0)+"% of your budget used. Be careful.":money(remaining)+" remaining ("+percent.toFixed(0)+"% used).";
-  const list=document.getElementById("categoryBudgetList");list.replaceChildren();
-  const saved=categoryBudgets[month]||{};const names=Object.keys(saved);
-  if(!names.length)list.appendChild(make("p","empty","No category budgets set for this month."));
-  names.forEach(name=>{const total=sum(items.filter(item=>item.category===name),"expense"),cap=Number(saved[name]),used=cap?total/cap*100:0,row=make("div","budget-row"),head=make("div","budget-row-head");head.append(make("span","",name),make("strong","",money(total)+" / "+money(cap)));const progress=make("div","progress"),fill=make("span");fill.style.width=Math.min(used,100)+"%";fill.className=used>=100?"over":used>=80?"warn":"";progress.appendChild(fill);const statusText=make("p","status "+(used>=100?"over":used>=80?"warn":""),used>=100?"Category limit exceeded.":used>=80?"Close to category limit.":money(Math.max(cap-total,0))+" remaining.");const remove=make("button","button danger small","Remove limit");remove.type="button";remove.dataset.category=name;remove.dataset.month=month;row.append(head,progress,statusText,remove);list.appendChild(row);});
-}
-function setupBudget() {
-  const form=document.getElementById("monthlyBudgetForm");if(!form)return;
-  const month=document.getElementById("budgetMonth"),categoryMonth=document.getElementById("categoryBudgetMonth");month.value=currentMonth;categoryMonth.value=currentMonth;
-  form.addEventListener("submit",event=>{event.preventDefault();const key=month.value,amount=Number(document.getElementById("budgetAmount").value);if(!key||!Number.isFinite(amount)||amount<=0)return;budgets[key]=amount;if(saveData()){document.getElementById("budgetFeedback").textContent="Monthly budget saved.";updateBudgetPage();updateDashboard();}});
-  month.addEventListener("change",updateBudgetPage);
-  document.getElementById("categoryBudgetForm").addEventListener("submit",event=>{event.preventDefault();const key=categoryMonth.value,name=document.getElementById("budgetCategory").value,amount=Number(document.getElementById("categoryBudgetAmount").value);if(!key||!Number.isFinite(amount)||amount<=0)return;if(!categoryBudgets[key])categoryBudgets[key]={};categoryBudgets[key][name]=amount;if(saveData()){document.getElementById("categoryBudgetForm").reset();categoryMonth.value=key;updateBudgetPage();}});
-  categoryMonth.addEventListener("change",()=>{month.value=categoryMonth.value;updateBudgetPage();});
-  document.getElementById("categoryBudgetList").addEventListener("click",event=>{const button=event.target.closest("button[data-category]");if(!button)return;const key=button.dataset.month,name=button.dataset.category;if(categoryBudgets[key]){delete categoryBudgets[key][name];if(!Object.keys(categoryBudgets[key]).length)delete categoryBudgets[key];saveData();updateBudgetPage();}});
-  updateBudgetPage();
-}
-function updateReports() {
-  const input=document.getElementById("reportMonth");
-  if(!input)return;
-  const month=input.value||currentMonth;
-  const items=monthItems(month);
-  const income=sum(items,"income");
-  const expense=sum(items,"expense");
-  const savings=income-expense;
-  const savingsRate=income?(savings/income)*100:0;
-
-  document.getElementById("reportIncome").textContent=money(income);
-  document.getElementById("reportExpense").textContent=money(expense);
-  document.getElementById("reportSavings").textContent=money(savings);
-  document.getElementById("reportSavingsRate").textContent=income?savingsRate.toFixed(1)+"%":"—";
-
-  const expenseItems=items.filter(item=>item.type==="expense");
-  const categoryTotals={};
-  expenseItems.forEach(item=>{
-    categoryTotals[item.category]=(categoryTotals[item.category]||0)+Number(item.amount);
-  });
-  const categoryEntries=Object.entries(categoryTotals).sort((a,b)=>b[1]-a[1]);
-  const top=categoryEntries[0];
-  const topCategory=document.getElementById("topCategory");
-  const topDetail=document.getElementById("topCategoryDetail");
-  topCategory.textContent=top?top[0]:"No data yet";
-  topDetail.textContent=top?money(top[1])+" · "+(expense?((top[1]/expense)*100).toFixed(1):0)+"% of your expenses":"Add expenses to discover your top category.";
-
-  const largest=[...expenseItems].sort((a,b)=>Number(b.amount)-Number(a.amount))[0];
-  document.getElementById("largestExpense").textContent=largest?money(largest.amount):"No data yet";
-  document.getElementById("largestExpenseDetail").textContent=largest?largest.description+" · "+largest.category+" · "+largest.date:"Your biggest single expense will appear here.";
-
-  const year=Number(month.slice(0,4)),monthNumber=Number(month.slice(5,7));
-  const daysInMonth=new Date(year,monthNumber,0).getDate();
-  const todayMonth=currentMonth;
-  const daysCounted=month===todayMonth?Math.max(1,today.getDate()):daysInMonth;
-  document.getElementById("dailyAverage").textContent=money(expense/daysCounted);
-  document.getElementById("dailyAverageDetail").textContent="Based on "+daysCounted+" calendar day"+(daysCounted===1?"":"s")+" in the selected month.";
-
-  const previousDate=new Date(year,monthNumber-2,1);
-  const previousMonth=previousDate.getFullYear()+"-"+String(previousDate.getMonth()+1).padStart(2,"0");
-  const previousExpense=sum(monthItems(previousMonth),"expense");
-  const change=document.getElementById("expenseChange");
-  const changeDetail=document.getElementById("expenseChangeDetail");
-  const changeBar=document.getElementById("comparisonProgress");
-  if(previousExpense===0&&expense===0){
-    change.textContent="No change";
-    changeDetail.textContent="No expenses recorded in either selected or previous month.";
-    changeBar.style.width="0%";
-    changeBar.className="";
-  }else if(previousExpense===0){
-    change.textContent="New spending";
-    changeDetail.textContent="You recorded "+money(expense)+" in expenses. There was no spending recorded in "+previousMonth+".";
-    changeBar.style.width="100%";
-    changeBar.className="warn";
-  }else{
-    const difference=expense-previousExpense;
-    const percentage=Math.abs(difference/previousExpense*100);
-    change.textContent=(difference>0?"+":difference<0?"−":"")+percentage.toFixed(1)+"%";
-    changeDetail.textContent=difference>0?"Expenses increased by "+money(difference)+" compared with "+previousMonth+".":difference<0?"Expenses decreased by "+money(Math.abs(difference))+" compared with "+previousMonth+".":"Your expenses are the same as the previous month.";
-    changeBar.style.width=Math.min(percentage,100)+"%";
-    changeBar.className=difference>0?"warn":"";
-  }
-
-  const budgetLimit=Number(budgets[month])||0;
-  const budgetPercent=budgetLimit?expense/budgetLimit*100:0;
-  const budgetHealth=document.getElementById("budgetHealth");
-  const budgetDetail=document.getElementById("budgetHealthDetail");
-  const budgetBar=document.getElementById("insightBudgetProgress");
-  if(!budgetLimit){
-    budgetHealth.textContent="No budget set";
-    budgetDetail.textContent="Set a monthly budget to see how your spending compares.";
-    budgetBar.style.width="0%";
-    budgetBar.className="";
-  }else{
-    budgetHealth.textContent=budgetPercent.toFixed(0)+"% used";
-    budgetDetail.textContent=budgetPercent>=100?"You are "+money(expense-budgetLimit)+" over your budget.":money(budgetLimit-expense)+" remaining from your "+money(budgetLimit)+" limit.";
-    budgetBar.style.width=Math.min(budgetPercent,100)+"%";
-    budgetBar.className=budgetPercent>=100?"over":budgetPercent>=80?"warn":"";
-  }
-
-  const categoryList=document.getElementById("reportCategories");
-  categoryList.replaceChildren();
-  if(!categoryEntries.length){
-    categoryList.appendChild(make("p","empty","No expenses recorded for this month."));
-  }else{
-    categoryEntries.forEach(([name,amount])=>{
-      const row=make("div","bar-row");
-      const head=make("div","bar-label");
-      head.append(make("span","",name),make("strong","",money(amount)+" · "+(expense?amount/expense*100:0).toFixed(1)+"%"));
-      const bar=make("div","bar");
-      const fill=make("span");
-      fill.style.width=(expense?amount/expense*100:0)+"%";
-      bar.appendChild(fill);
-      row.append(head,bar);
-      categoryList.appendChild(row);
-    });
-  }
-
-  const recommendations=document.getElementById("reportRecommendations");
-  recommendations.replaceChildren();
-  const tips=[];
-  if(!items.length){
-    tips.push("No transactions found for this month. Add your income and expenses to unlock useful insights.");
-  }else{
-    if(savings<0)tips.push("Your expenses are higher than your income by "+money(Math.abs(savings))+". Review non-essential spending first.");
-    else if(income>0&&savingsRate>=20)tips.push("You saved "+savingsRate.toFixed(1)+"% of your income. Keep following the habits that helped you reach this.");
-    else if(income>0&&savingsRate>=0)tips.push("Your savings rate is "+savingsRate.toFixed(1)+"%. Try setting aside a small amount as soon as income arrives.");
-    if(top&&expense>0&&top[1]/expense>=0.4)tips.push(top[0]+" accounts for "+(top[1]/expense*100).toFixed(1)+"% of your spending. Check whether this category has any costs you can reduce.");
-    if(previousExpense>0&&expense>previousExpense*1.15)tips.push("Your spending is more than 15% higher than last month. Review recent purchases to find what changed.");
-    if(previousExpense>0&&expense<previousExpense*0.85)tips.push("Your spending is down by more than 15% compared with last month. Keep the sustainable changes going.");
-    if(budgetLimit&&budgetPercent>=100)tips.push("You have crossed your monthly budget. Pause optional purchases and review the remaining days of the month.");
-    else if(budgetLimit&&budgetPercent>=80)tips.push("You have used "+budgetPercent.toFixed(0)+"% of your budget. Set a smaller weekly spending limit for the rest of the month.");
-    if(largest&&expenseItems.length>1)tips.push("Your largest purchase was "+largest.description+" for "+money(largest.amount)+". Consider planning for similar large costs in advance.");
-    if(!tips.length)tips.push("Your spending looks steady based on the available records. Keep recording transactions so future insights become more useful.");
-  }
-  tips.forEach(tip=>{
-    const row=make("div","recommendation-item");
-    row.appendChild(make("span","recommendation-mark","✓"));
-    row.appendChild(make("p","",tip));
-    recommendations.appendChild(row);
-  });
-}
-function setupReports(){const input=document.getElementById("reportMonth");if(!input)return;input.value=currentMonth;input.addEventListener("change",updateReports);updateReports();}
-
-/* Load the next page in the background so navigation feels faster. */
-function setupFastNavigation() {
-  const prefetched = new Set();
-  function prefetchPage(link) {
-    if (!link || link.origin !== location.origin || !/\.html(?:$|#)/.test(link.pathname + link.hash)) return;
-    const url = link.href.split("#")[0];
-    if (prefetched.has(url) || url === location.href.split("#")[0]) return;
-    prefetched.add(url);
-    const hint = document.createElement("link");
-    hint.rel = "prefetch";
-    hint.href = url;
-    hint.as = "document";
-    document.head.appendChild(hint);
-  }
-  document.addEventListener("pointerover", event => {
-    const link = event.target.closest("a[href]");
-    if (link) prefetchPage(link);
-  }, { passive: true });
-  document.addEventListener("focusin", event => {
-    const link = event.target.closest("a[href]");
-    if (link) prefetchPage(link);
-  });
-  document.addEventListener("touchstart", event => {
-    const link = event.target.closest("a[href]");
-    if (link) prefetchPage(link);
-  }, { passive: true });
-}
-
-setupFastNavigation();
-updateDashboard();setupTransactions();setupBudget();setupReports();
+// PocketTrack: shared JavaScript for all pages (optimized).
+const KEYS = { tx: "pocketTrackTransactions", budget: "pocketTrackBudgets", cat: "pocketTrackCategoryBudgets" };
+const pad = n => String(n).padStart(2, "0"), now = new Date(), fmt = new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 });
+const todayText = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`, currentMonth = todayText.slice(0, 7);
+const validDate = s => { if (!/^\d{4}-\d{2}-\d{2}$/.test(s || "")) return false; const [y,m,d] = s.split("-").map(Number), date = new Date(y,m-1,d); return date.getFullYear() === y && date.getMonth() === m-1 && date.getDate() === d; };
+let transactions, budgets, categoryBudgets;
+const $ = id => document.getElementById(id), money = v => fmt.format(Number(v) || 0);
+const sum = (items, type) => items.filter(i => !type || i.type === type).reduce((t, i) => t + Number(i.amount), 0);
+const monthItems = m => transactions.filter(i => i.date.startsWith(m)), statusClass = p => (p >= 100 ? "over" : p >= 80 ? "warn" : "");
+const setText = (id, text) => ($(id).textContent = text), setTexts = o => Object.entries(o).forEach(([id, t]) => setText(id, t));
+const setBar = (el, pct) => { el.style.width = Math.min(pct, 100) + "%"; el.className = statusClass(pct); };
+const make = (tag, cls, text) => { const el = document.createElement(tag); el.className = cls || ""; if (text !== undefined) el.textContent = text; return el; };
+const btn = (text, cls, data) => { const b = make("button", "button " + cls, text); b.type = "button"; Object.assign(b.dataset, data); return b; };
+const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const asObj = v => (v && typeof v === "object" && !Array.isArray(v) ? v : {});
+function loadAll() { const list = load(KEYS.tx); transactions = (Array.isArray(list) ? list : []).filter(i => i && typeof i.id === "string" && typeof i.description === "string"
+    && ["income", "expense"].includes(i.type) && Number.isFinite(Number(i.amount)) && Number(i.amount) > 0 && validDate(i.date)); budgets = asObj(load(KEYS.budget)); categoryBudgets = asObj(load(KEYS.cat)); }
+function saveData() { const keys = Object.values(KEYS), data = [transactions, budgets, categoryBudgets]; let old = [];
+  try { old = keys.map(k => localStorage.getItem(k)); keys.forEach((k, i) => localStorage.setItem(k, JSON.stringify(data[i]))); return true; } catch {
+    keys.forEach((k, i) => { try { if (old[i] === null) localStorage.removeItem(k); else if (old[i] !== undefined) localStorage.setItem(k, old[i]); } catch {} });
+    loadAll(); alert("Could not save changes. Your previous saved data has been kept. Check browser storage or privacy settings."); return false; } }
+const refreshAll = () => { updateDashboard(); updateBudgetPage(); updateReports(); };
+function transactionRow(item, actions = false) { const row = make("div", "transaction"), info = make("div", "transaction-info"), side = make("div", "transaction-side");
+  info.append(make("div", "transaction-title", item.description), make("div", "transaction-meta", `${item.category} · ${item.date} · ${item.payment || "Other"}${item.note ? " · " + item.note : ""}`));
+  side.appendChild(make("span", "transaction-amount " + item.type, (item.type === "income" ? "+ " : "− ") + money(item.amount)));
+  if (actions) { const box = make("div", "transaction-actions"); box.append(btn("Edit", "secondary small", { action: "edit", id: item.id }), btn("Delete", "danger small", { action: "delete", id: item.id })); side.appendChild(box); }
+  row.append(info, side); return row; }
+function updateDashboard() { if (!$("balance")) return;
+  const income = sum(transactions, "income"), expense = sum(transactions, "expense"), latest = [...transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const spent = sum(monthItems(currentMonth), "expense"), limit = Number(budgets[currentMonth]) || 0, pct = limit ? spent / limit * 100 : 0;
+  setTexts({ balance: money(income - expense), totalIncome: money(income), totalExpense: money(expense), dashboardSpent: money(spent),
+    dashboardMonth: new Date(currentMonth + "-01T12:00:00").toLocaleDateString("en-IN", { month: "long", year: "numeric" }),
+    dashboardBudgetStatus: !limit ? "Set a monthly budget to track your spending." : pct >= 100 ? "You have exceeded your monthly budget." : `You have used ${pct.toFixed(0)}% of your budget.` });
+  $("recentTransactions").replaceChildren(...(latest.length ? latest.map(i => transactionRow(i)) : [make("p", "empty", "No transactions yet. Add your first transaction.")])); setBar($("dashboardProgress"), pct); }
+function setupTransactions() { const form = $("transactionForm"); if (!form) return;
+  const list = $("transactionList"), search = $("searchTransactions"), type = $("filterType"), month = $("filterMonth"), feedback = $("transactionFeedback");
+  const fields = ["description", "amount", "type", "category", "date", "payment", "note"]; $("date").value = todayText; function render() {
+    const query = search.value.trim().toLowerCase(), selected = month.value || "all";
+    month.replaceChildren(new Option("All months", "all"), ...[...new Set(transactions.map(i => i.date.slice(0, 7)))].sort().reverse().map(m => new Option(m, m))); month.value = selected;
+    const rows = transactions.filter(i => (type.value === "all" || i.type === type.value) && (month.value === "all" || i.date.startsWith(month.value))
+      && `${i.description} ${i.category} ${i.note || ""}`.toLowerCase().includes(query)).sort((a, b) => b.date.localeCompare(a.date));
+    list.replaceChildren(...(rows.length ? rows.map(i => transactionRow(i, true)) : [make("p", "empty", "No matching transactions found.")])); }
+  function resetForm() { form.reset(); $("editId").value = ""; $("date").value = todayText; setTexts({ formTitle: "Add a transaction", saveTransaction: "Save transaction" }); $("cancelEdit").hidden = true; }
+  const done = () => { render(); refreshAll(); }; form.addEventListener("submit", e => { e.preventDefault();
+    const id = $("editId").value, description = $("description").value.trim(), amount = Number($("amount").value), date = $("date").value;
+    if (!description || !Number.isFinite(amount) || amount <= 0 || !validDate(date)) { feedback.textContent = "Enter a valid description, amount and date."; return; }
+    const record = { id: id || Date.now() + "-" + Math.random().toString(16).slice(2), description, amount, date, type: $("type").value, category: $("category").value, payment: $("payment").value, note: $("note").value.trim() };
+    transactions = id ? transactions.map(i => (i.id === id ? record : i)) : [...transactions, record];
+    if (saveData()) { feedback.textContent = id ? "Transaction updated." : "Transaction saved."; resetForm(); done(); } }); $("cancelEdit").addEventListener("click", resetForm); list.addEventListener("click", e => {
+    const button = e.target.closest("button[data-action]"), item = button && transactions.find(r => r.id === button.dataset.id); if (!item) return;
+    if (button.dataset.action === "delete") { if (confirm("Delete this transaction?")) { transactions = transactions.filter(r => r.id !== item.id); if (saveData()) done(); } return; }
+    $("editId").value = item.id; fields.forEach(f => ($(f).value = item[f] || (f === "payment" ? "Other" : "")));
+    setTexts({ formTitle: "Edit transaction", saveTransaction: "Update transaction" }); $("cancelEdit").hidden = false; form.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  [search, type, month].forEach(el => el.addEventListener(el === search ? "input" : "change", render)); render(); }
+function updateBudgetPage() { if (!$("monthlyBudgetForm")) return; const month = $("budgetMonth").value || currentMonth, items = monthItems(month), spent = sum(items, "expense");
+  const limit = Number(budgets[month]) || 0, pct = limit ? spent / limit * 100 : 0, remaining = limit - spent, status = $("budgetStatus"); $("budgetAmount").value = limit || "";
+  setTexts({ budgetSpent: money(spent), budgetRemaining: limit ? money(Math.abs(remaining)) + (remaining < 0 ? " over" : "") : "Not set",
+    budgetStatus: !limit ? "Set a monthly budget to begin." : pct >= 100 ? `Budget exceeded by ${money(spent - limit)}.` : pct >= 80 ? `${pct.toFixed(0)}% of your budget used. Be careful.` : `${money(remaining)} remaining (${pct.toFixed(0)}% used).` });
+  setBar($("budgetProgress"), pct); status.className = "status " + statusClass(pct); const saved = categoryBudgets[month] || {}, names = Object.keys(saved);
+  $("categoryBudgetList").replaceChildren(...(names.length ? names.map(name => { const total = sum(items.filter(i => i.category === name), "expense"), cap = Number(saved[name]), used = cap ? total / cap * 100 : 0;
+    const head = make("div", "budget-row-head"), progress = make("div", "progress"), fill = make("span"), row = make("div", "budget-row");
+    head.append(make("span", "", name), make("strong", "", `${money(total)} / ${money(cap)}`)); setBar(fill, used); progress.appendChild(fill);
+    row.append(head, progress, make("p", "status " + statusClass(used), used >= 100 ? "Category limit exceeded." : used >= 80 ? "Close to category limit." : `${money(Math.max(cap - total, 0))} remaining.`), btn("Remove limit", "danger small", { category: name, month }));
+    return row; }) : [make("p", "empty", "No category budgets set for this month.")])); }
+function setupBudget() { const form = $("monthlyBudgetForm"); if (!form) return;
+  const month = $("budgetMonth"), catMonth = $("categoryBudgetMonth"), catForm = $("categoryBudgetForm"), valid = (k, a) => k && Number.isFinite(a) && a > 0; month.value = catMonth.value = currentMonth;
+  form.addEventListener("submit", e => { e.preventDefault(); const key = month.value, amount = Number($("budgetAmount").value); if (!valid(key, amount)) return; budgets[key] = amount;
+    if (saveData()) { setText("budgetFeedback", "Monthly budget saved."); updateBudgetPage(); updateDashboard(); } }); catForm.addEventListener("submit", e => {
+    e.preventDefault(); const key = catMonth.value, amount = Number($("categoryBudgetAmount").value); if (!valid(key, amount)) return; (categoryBudgets[key] ||= {})[$("budgetCategory").value] = amount;
+    if (saveData()) { catForm.reset(); catMonth.value = key; updateBudgetPage(); } }); month.addEventListener("change", updateBudgetPage);
+  catMonth.addEventListener("change", () => { month.value = catMonth.value; updateBudgetPage(); }); $("categoryBudgetList").addEventListener("click", e => {
+    const b = e.target.closest("button[data-category]"), m = b && b.dataset.month; if (!b || !categoryBudgets[m]) return;
+    delete categoryBudgets[m][b.dataset.category]; if (!Object.keys(categoryBudgets[m]).length) delete categoryBudgets[m]; saveData(); updateBudgetPage(); }); updateBudgetPage(); }
+function updateReports() { const input = $("reportMonth"); if (!input) return; const month = input.value || currentMonth, items = monthItems(month), income = sum(items, "income"), expense = sum(items, "expense");
+  const savings = income - expense, rate = income ? savings / income * 100 : 0, pctOf = v => (expense ? v / expense * 100 : 0); const expenses = items.filter(i => i.type === "expense"), totals = {};
+  expenses.forEach(i => (totals[i.category] = (totals[i.category] || 0) + Number(i.amount)));
+  const entries = Object.entries(totals).sort((a, b) => b[1] - a[1]), top = entries[0], largest = expenses.reduce((a, b) => (!a || Number(b.amount) > Number(a.amount) ? b : a), null);
+  const year = Number(month.slice(0, 4)), mon = Number(month.slice(5, 7)), days = month === currentMonth ? Math.max(1, now.getDate()) : new Date(year, mon, 0).getDate();
+  const prev = new Date(year, mon - 2, 1), prevMonth = `${prev.getFullYear()}-${pad(prev.getMonth() + 1)}`, prevExpense = sum(monthItems(prevMonth), "expense");
+  const limit = Number(budgets[month]) || 0, bp = limit ? expense / limit * 100 : 0; let change = "No change", detail = "No expenses recorded in either selected or previous month.", width = 0, cls = "";
+  if (!prevExpense && expense) { change = "New spending"; detail = `You recorded ${money(expense)} in expenses. There was no spending recorded in ${prevMonth}.`; width = 100; cls = "warn"; } else if (prevExpense) {
+    const diff = expense - prevExpense, p = Math.abs(diff / prevExpense * 100); change = (diff > 0 ? "+" : diff < 0 ? "−" : "") + p.toFixed(1) + "%"; width = Math.min(p, 100); cls = diff > 0 ? "warn" : "";
+    detail = diff > 0 ? `Expenses increased by ${money(diff)} compared with ${prevMonth}.` : diff < 0 ? `Expenses decreased by ${money(-diff)} compared with ${prevMonth}.` : "Your expenses are the same as the previous month.";
+  } setTexts({ reportIncome: money(income), reportExpense: money(expense), reportSavings: money(savings), reportSavingsRate: income ? rate.toFixed(1) + "%" : "—",
+    topCategory: top ? top[0] : "No data yet", topCategoryDetail: top ? `${money(top[1])} · ${pctOf(top[1]).toFixed(1)}% of your expenses` : "Add expenses to discover your top category.",
+    largestExpense: largest ? money(largest.amount) : "No data yet", largestExpenseDetail: largest ? `${largest.description} · ${largest.category} · ${largest.date}` : "Your biggest single expense will appear here.",
+    dailyAverage: money(expense / days), dailyAverageDetail: `Based on ${days} calendar day${days === 1 ? "" : "s"} in the selected month.`,
+    expenseChange: change, expenseChangeDetail: detail, budgetHealth: limit ? bp.toFixed(0) + "% used" : "No budget set",
+    budgetHealthDetail: !limit ? "Set a monthly budget to see how your spending compares." : bp >= 100 ? `You are ${money(expense - limit)} over your budget.` : `${money(limit - expense)} remaining from your ${money(limit)} limit.` });
+  Object.assign($("comparisonProgress"), { className: cls }).style.width = width + "%"; setBar($("insightBudgetProgress"), limit ? bp : 0);
+  $("reportCategories").replaceChildren(...(entries.length ? entries.map(([name, amount]) => { const row = make("div", "bar-row"), head = make("div", "bar-label"), bar = make("div", "bar"), fill = make("span");
+    head.append(make("span", "", name), make("strong", "", `${money(amount)} · ${pctOf(amount).toFixed(1)}%`)); fill.style.width = pctOf(amount) + "%"; bar.appendChild(fill); row.append(head, bar); return row;
+  }) : [make("p", "empty", "No expenses recorded for this month.")])); const tips = !items.length ? ["No transactions found for this month. Add your income and expenses to unlock useful insights."] : [
+    savings < 0 ? `Your expenses are higher than your income by ${money(-savings)}. Review non-essential spending first.` : income > 0 && rate >= 20 ? `You saved ${rate.toFixed(1)}% of your income. Keep following the habits that helped you reach this.` : income > 0 && `Your savings rate is ${rate.toFixed(1)}%. Try setting aside a small amount as soon as income arrives.`,
+    top && expense > 0 && top[1] / expense >= 0.4 && `${top[0]} accounts for ${pctOf(top[1]).toFixed(1)}% of your spending. Check whether this category has any costs you can reduce.`,
+    prevExpense > 0 && expense > prevExpense * 1.15 && "Your spending is more than 15% higher than last month. Review recent purchases to find what changed.",
+    prevExpense > 0 && expense < prevExpense * 0.85 && "Your spending is down by more than 15% compared with last month. Keep the sustainable changes going.",
+    limit && bp >= 100 ? "You have crossed your monthly budget. Pause optional purchases and review the remaining days of the month." : limit && bp >= 80 && `You have used ${bp.toFixed(0)}% of your budget. Set a smaller weekly spending limit for the rest of the month.`,
+    largest && expenses.length > 1 && `Your largest purchase was ${largest.description} for ${money(largest.amount)}. Consider planning for similar large costs in advance.`].filter(Boolean);
+  if (items.length && !tips.length) tips.push("Your spending looks steady based on the available records. Keep recording transactions so future insights become more useful.");
+  $("reportRecommendations").replaceChildren(...tips.map(t => { const row = make("div", "recommendation-item"); row.append(make("span", "recommendation-mark", "✓"), make("p", "", t)); return row; })); }
+function setupReports() { const input = $("reportMonth"); if (!input) return; input.value = currentMonth; input.addEventListener("change", updateReports); updateReports(); }
+function setupFastNavigation() { const seen = new Set([location.href.split("#")[0]]); const prefetch = e => { const a = e.target.closest?.("a[href]"), url = a && a.href.split("#")[0];
+    if (!a || a.origin !== location.origin || !a.pathname.endsWith(".html") || seen.has(url)) return;
+    seen.add(url); document.head.appendChild(Object.assign(document.createElement("link"), { rel: "prefetch", href: url, as: "document" })); };
+  ["pointerover", "focusin", "touchstart"].forEach(t => document.addEventListener(t, prefetch, { passive: true })); }
+loadAll(); setupFastNavigation(); updateDashboard(); setupTransactions(); setupBudget(); setupReports();
