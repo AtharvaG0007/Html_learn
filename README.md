@@ -99,3 +99,4 @@ JavaScript finds an HTML element by its `id`. For example, `$("balance")` finds 
 | `setupFastNavigation()` | Hints to the browser that a linked page may be opened next. |
 
 Comments in the HTML, CSS and JavaScript explain the main sections and how the pieces connect. Comments are notes for people reading the code; they do not change how the app runs.
+[![Architecture diagram](https://gitdiagram.com/diagram-badge.svg)](https://gitdiagram.com/atharvag0007/html_learn?utm_source=readme&utm_medium=badge)
